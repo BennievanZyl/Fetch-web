@@ -4,7 +4,82 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fetch Admin — Invite Codes</title>
-<link rel="stylesheet" href="admin-shared.css">
+<link rel="stylesheet" href="/admin-shared.css?v=3">
+<script>const SUPABASE_URL = 'https://errbnpeswpjmdsvehduz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycmJucGVzd3BqbWRzdmVoZHV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDgzMDMsImV4cCI6MjA4NjgyNDMwM30.ZYeZUV6PFs_yATPMUisH9vzXwWaMpBUwEn6Dsy6F0z8';
+
+function getToken() { return localStorage.getItem('fetch_admin_token'); }
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${getToken() || SUPABASE_KEY}` };
+}
+function guardAdmin() { if (!getToken()) { window.location.href = '/admin'; return false; } return true; }
+function signOut() { localStorage.removeItem('fetch_admin_token'); localStorage.removeItem('fetch_admin_user'); window.location.href = '/admin'; }
+
+async function sbGet(table, params = '') {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${params}`, { headers: authHeaders() });
+  return res.json();
+}
+async function sbPost(table, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, { method: 'POST', headers: { ...authHeaders(), 'Prefer': 'return=representation' }, body: JSON.stringify(body) });
+  return res.json();
+}
+async function sbPatch(table, id, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'PATCH', headers: { ...authHeaders(), 'Prefer': 'return=representation' }, body: JSON.stringify(body) });
+  return res.json();
+}
+async function sbDelete(table, id) { await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'DELETE', headers: authHeaders() }); }
+
+function generateCode() { return 'FETCH-' + Math.random().toString(36).substring(2, 8).toUpperCase(); }
+function formatZAR(amount) { return 'R' + parseFloat(amount || 0).toFixed(2); }
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function statusPill(status) {
+  const map = { pending:['#FFF8E6','#9A6500'], confirmed:['#E6F0FB','#1A5FA5'], preparing:['#FFF8E6','#9A6500'], ready:['#F3E6FB','#6B21A8'], picked_up:['#E6F9F0','#0A7A45'], delivered:['#E6F9F0','#0A7A45'], cancelled:['#FDECEA','#B91C1C'], active:['#E6F9F0','#0A7A45'], onboarding:['#F7F7F7','#8E8E8E'], paused:['#FFF8E6','#9A6500'], suspended:['#FDECEA','#B91C1C'], approved:['#E6F9F0','#0A7A45'], rejected:['#FDECEA','#B91C1C'], driver:['#E6F9F0','#0A7A45'], suspended_driver:['#FDECEA','#B91C1C'] };
+  const [bg, color] = map[status] || ['#F7F7F7','#8E8E8E'];
+  const label = status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return `<span style="background:${bg};color:${color};padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap">${label}</span>`;
+}
+function buildSidebar(activePage) {
+  const pages = [
+    { id:'dashboard', icon:'📊', label:'Dashboard',    href:'/admin/dashboard' },
+    { id:'enquiries', icon:'📋', label:'Enquiries',    href:'/admin/enquiries' },
+    { id:'stores',    icon:'🏪', label:'Stores',       href:'/admin/stores' },
+    { id:'codes',     icon:'🎟️', label:'Invite Codes', href:'/admin/codes' },
+    { id:'orders',    icon:'🛒', label:'Orders',       href:'/admin/orders' },
+    { id:'drivers',   icon:'🚗', label:'Drivers',      href:'/admin/drivers' },
+  ];
+  const items = pages.map(p => `<a href="${p.href}" class="sidebar-item ${p.id===activePage?'active':''}"><span>${p.icon}</span><span>${p.label}</span></a>`).join('');
+  return `<aside class="sidebar"><div class="sidebar-logo">FETCH<span>.</span></div><div class="sidebar-badge">Admin</div><nav class="sidebar-nav">${items}</nav><button class="sidebar-signout" onclick="signOut()">Sign Out</button></aside>`;
+}
+function showModal(html) {
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto';
+  overlay.innerHTML = `<div style="background:#fff;border-radius:20px;padding:40px;max-width:520px;width:100%;position:relative">${html}<button onclick="closeModal()" style="position:absolute;top:16px;right:16px;background:#f7f7f7;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button></div>`;
+  overlay.addEventListener('click', e => { if(e.target===overlay) closeModal(); });
+  document.body.appendChild(overlay);
+}
+function closeModal() { const el = document.getElementById('modal-overlay'); if(el) el.remove(); }
+function copyToClipboard(text, btn) {
+  navigator.clipboard.writeText(text).then(() => { const o=btn.textContent; btn.textContent='Copied! ✓'; btn.style.background='#06C167'; btn.style.color='#fff'; setTimeout(()=>{btn.textContent=o;btn.style.background='';btn.style.color='';},2000); });
+}
+function whatsappLink(phone, code, ownerName, storeName) {
+  const num = (phone||'').replace(/\D/g,'').replace(/^0/,'27');
+  const msg = encodeURIComponent(`Hi ${ownerName}! 👋 Welcome to Fetch 🎉\n\nYour store *${storeName}* has been approved!\n\nDownload the Fetch app and enter your Partner Code:\n\n*${code}*\n\nYour code expires in 30 days. Reply if you need help!`);
+  return `https://wa.me/${num}?text=${msg}`;
+}
+</script>
 </head>
 <body>
 <div id="sidebar-wrap"></div>
@@ -24,61 +99,34 @@
     </div>
     <div class="table-card">
       <table>
-        <thead>
-          <tr><th>Code</th><th>Store</th><th>Email</th><th>Created</th><th>Expires</th><th>Status</th><th>Actions</th></tr>
-        </thead>
-        <tbody id="codes-tbody">
-          <tr><td colspan="7" style="text-align:center;padding:40px;color:#8E8E8E">Loading...</td></tr>
-        </tbody>
+        <thead><tr><th>Code</th><th>Store</th><th>Email</th><th>Created</th><th>Expires</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="codes-tbody"><tr><td colspan="7" style="text-align:center;padding:40px;color:#8E8E8E">Loading...</td></tr></tbody>
       </table>
     </div>
   </div>
 </div>
-
-<script src="admin-shared.js"></script>
 <script>
   guardAdmin();
   document.getElementById('sidebar-wrap').innerHTML = buildSidebar('codes');
-  let allCodes = [];
-  let allStores = [];
-  let currentFilter = 'all';
+  let allCodes = [], allStores = [], currentFilter = 'all';
 
-  function codeStatus(c) {
-    if (c.is_used) return 'used';
-    if (new Date(c.expires_at) < new Date()) return 'expired';
-    return 'active';
-  }
+  function codeStatus(c) { if (c.is_used) return 'used'; if (new Date(c.expires_at) < new Date()) return 'expired'; return 'active'; }
 
   async function loadCodes() {
-    [allCodes, allStores] = await Promise.all([
-      sbGet('store_invites', '?order=created_at.desc&select=*'),
-      sbGet('stores', '?select=id,name')
-    ]);
+    [allCodes, allStores] = await Promise.all([sbGet('store_invites', '?order=created_at.desc&select=*'), sbGet('stores', '?select=id,name')]);
     if (!Array.isArray(allCodes)) allCodes = [];
     if (!Array.isArray(allStores)) allStores = [];
     renderCodes();
   }
 
-  function setFilter(f, btn) {
-    currentFilter = f;
-    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    renderCodes();
-  }
-
-  function storeName(storeId) {
-    const s = allStores.find(s => s.id === storeId);
-    return s ? s.name : storeId ? storeId.slice(0,8)+'...' : '—';
-  }
+  function setFilter(f, btn) { currentFilter = f; document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); renderCodes(); }
+  function storeName(id) { const s = allStores.find(s => s.id === id); return s ? s.name : id ? id.slice(0,8)+'...' : '—'; }
 
   function renderCodes() {
     let data = allCodes;
     if (currentFilter !== 'all') data = data.filter(c => codeStatus(c) === currentFilter);
     const tbody = document.getElementById('codes-tbody');
-    if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:48px;color:#8E8E8E"><div style="font-size:32px;margin-bottom:12px">🎟️</div>No codes found</td></tr>`;
-      return;
-    }
+    if (!data.length) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:48px;color:#8E8E8E"><div style="font-size:32px;margin-bottom:12px">🎟️</div>No codes found</td></tr>`; return; }
     tbody.innerHTML = data.map(c => {
       const st = codeStatus(c);
       const pillMap = { active:['#E6F9F0','#0A7A45'], used:['#F7F7F7','#8E8E8E'], expired:['#FDECEA','#B91C1C'] };
@@ -93,8 +141,8 @@
         <td>
           <div style="display:flex;gap:6px">
             <button class="btn btn-grey btn-sm" onclick="copyToClipboard('${c.code}',this)">📋 Copy</button>
-            ${c.email && !c.is_used ? `<a href="https://wa.me/?text=${encodeURIComponent('Your Fetch Partner Code: '+c.code)}" target="_blank" class="btn btn-green btn-sm" style="text-decoration:none">💬</a>` : ''}
-            ${st === 'active' ? `<button class="btn btn-red btn-sm" onclick="revokeCode('${c.id}','${c.code}')">Revoke</button>` : ''}
+            ${c.email&&!c.is_used?`<a href="https://wa.me/?text=${encodeURIComponent('Your Fetch Partner Code: '+c.code)}" target="_blank" class="btn btn-green btn-sm" style="text-decoration:none">💬</a>`:''}
+            ${st==='active'?`<button class="btn btn-red btn-sm" onclick="revokeCode('${c.id}','${c.code}')">Revoke</button>`:''}
           </div>
         </td>
       </tr>`;
@@ -104,44 +152,25 @@
   async function openGenerateModal() {
     const stores = await sbGet('stores', '?select=id,name&order=name');
     const options = Array.isArray(stores) ? stores.map(s => `<option value="${s.id}">${s.name}</option>`).join('') : '';
+    const preview = generateCode();
     showModal(`
       <div class="modal-title">Generate Partner Code</div>
       <div class="modal-sub">Create a new invite code for a store partner</div>
-      <div class="modal-form-group">
-        <label>Store *</label>
-        <select id="g-store-id"><option value="">Select a store...</option>${options}</select>
-      </div>
-      <div class="modal-form-group">
-        <label>Partner Email *</label>
-        <input type="email" id="g-email" placeholder="partner@example.com">
-      </div>
-      <div class="modal-form-group">
-        <label>Expires In</label>
-        <select id="g-expires">
-          <option value="7">7 days</option>
-          <option value="14">14 days</option>
-          <option value="30" selected>30 days</option>
-          <option value="60">60 days</option>
-        </select>
-      </div>
+      <div class="modal-form-group"><label>Store *</label><select id="g-store-id"><option value="">Select a store...</option>${options}</select></div>
+      <div class="modal-form-group"><label>Partner Email *</label><input type="email" id="g-email" placeholder="partner@example.com"></div>
+      <div class="modal-form-group"><label>Expires In</label><select id="g-expires"><option value="7">7 days</option><option value="14">14 days</option><option value="30" selected>30 days</option><option value="60">60 days</option></select></div>
       <div style="background:#F7F7F7;border-radius:10px;padding:14px;margin:16px 0;text-align:center">
-        <div style="font-size:11px;color:#8E8E8E;margin-bottom:6px">Generated code preview</div>
-        <div id="code-preview" style="font-family:monospace;font-size:24px;font-weight:900;color:#06C167;letter-spacing:3px">FETCH-XXXXXX</div>
+        <div style="font-size:11px;color:#8E8E8E;margin-bottom:6px">Your code</div>
+        <div style="font-family:monospace;font-size:24px;font-weight:900;color:#06C167;letter-spacing:3px">${preview}</div>
       </div>
-      <div class="modal-buttons">
-        <button class="btn btn-black" style="flex:1;padding:14px" onclick="generateAndSave()" id="gen-btn">Generate & Save</button>
-      </div>
+      <div class="modal-buttons"><button class="btn btn-black" style="flex:1;padding:14px" onclick="generateAndSave('${preview}')" id="gen-btn">Generate & Save</button></div>
     `);
-    const preview = generateCode();
-    document.getElementById('code-preview').textContent = preview;
-    document.getElementById('gen-btn').dataset.code = preview;
   }
 
-  async function generateAndSave() {
+  async function generateAndSave(code) {
     const storeId = document.getElementById('g-store-id').value;
     const email = document.getElementById('g-email').value.trim();
     const days = parseInt(document.getElementById('g-expires').value);
-    const code = document.getElementById('gen-btn').dataset.code;
     const btn = document.getElementById('gen-btn');
     if (!storeId || !email) { alert('Please select a store and enter an email.'); return; }
     btn.textContent = 'Saving...'; btn.disabled = true;
@@ -162,11 +191,9 @@
   }
 
   async function revokeCode(id, code) {
-    if (!confirm(`Revoke code ${code}? The partner will no longer be able to use it.`)) return;
-    await sbPatch('store_invites', id, { expires_at: new Date().toISOString() });
-    loadCodes();
+    if (!confirm(`Revoke code ${code}?`)) return;
+    await sbPatch('store_invites', id, { expires_at: new Date().toISOString() }); loadCodes();
   }
-
   loadCodes();
 </script>
 </body>
