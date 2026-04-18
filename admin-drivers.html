@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fetch Admin — Enquiries</title>
+<title>Fetch Admin — Drivers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -153,144 +153,85 @@ function whatsappLink(phone, code, ownerName, storeName) {
 <div id="sidebar-wrap"></div>
 <div class="main">
   <div class="topbar">
-    <h1>Partner Enquiries <span id="pending-badge" class="badge badge-red" style="display:none"></span></h1>
+    <h1>Drivers <span id="driver-count" class="badge" style="display:none"></span></h1>
     <div class="topbar-right">
-      <input type="text" class="search-input" placeholder="Search by name or suburb..." oninput="filterTable(this.value)">
+      <input type="text" class="search-input" placeholder="Search drivers..." oninput="filterDrivers(this.value)">
     </div>
   </div>
   <div class="content">
-    <div class="filter-tabs">
-      <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
-      <button class="filter-tab" onclick="setFilter('pending',this)">Pending</button>
-      <button class="filter-tab" onclick="setFilter('approved',this)">Approved</button>
-      <button class="filter-tab" onclick="setFilter('rejected',this)">Rejected</button>
+    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
+      <div class="stat-card"><div class="stat-label" style="color:#06C167">Active Drivers</div><div class="stat-num" id="d-active" style="color:#06C167">—</div></div>
+      <div class="stat-card"><div class="stat-label">Total Deliveries</div><div class="stat-num" id="d-deliveries">—</div></div>
+      <div class="stat-card"><div class="stat-label" style="color:#E74C3C">Suspended</div><div class="stat-num" id="d-suspended" style="color:#E74C3C">—</div></div>
     </div>
     <div class="table-card">
       <table>
-        <thead><tr><th>Business</th><th>Owner</th><th>WhatsApp</th><th>Suburb</th><th>Cuisine</th><th>Applied</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody id="enq-tbody"><tr><td colspan="8" style="text-align:center;padding:40px;color:#8E8E8E">Loading...</td></tr></tbody>
+        <thead><tr><th>Driver</th><th>Phone</th><th>Deliveries</th><th>Est. Earnings</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="drivers-tbody"><tr><td colspan="6" style="text-align:center;padding:40px;color:#8E8E8E">Loading...</td></tr></tbody>
       </table>
     </div>
+    <p style="font-size:12px;color:#8E8E8E;margin-top:12px;text-align:center">* Earnings shown are estimates (15% of order total). Actual payouts processed separately.</p>
   </div>
 </div>
 <script>
   guardAdmin();
-  document.getElementById('sidebar-wrap').innerHTML = buildSidebar('enquiries');
-  let allEnquiries = [], currentFilter = 'all', searchQuery = '';
+  document.getElementById('sidebar-wrap').innerHTML = buildSidebar('drivers');
+  let allDrivers = [];
 
-  async function loadEnquiries() {
-    allEnquiries = await sbGet('partner_enquiries', '?order=created_at.desc');
-    if (!Array.isArray(allEnquiries)) allEnquiries = [];
-    const pending = allEnquiries.filter(e => e.status === 'pending').length;
-    const badge = document.getElementById('pending-badge');
-    if (pending > 0) { badge.textContent = pending; badge.style.display = 'inline-flex'; }
-    renderTable();
+  async function loadDrivers() {
+    const profiles = await sbGet('profiles', "?role=in.(driver,suspended_driver)&select=*&order=created_at.desc");
+    if (!Array.isArray(profiles)) { allDrivers = []; renderDrivers(); return; }
+    const deliveries = await sbGet('orders', '?status=eq.delivered&select=driver_id,total_amount');
+    const deliveryMap = {};
+    if (Array.isArray(deliveries)) {
+      deliveries.forEach(o => {
+        if (!o.driver_id) return;
+        if (!deliveryMap[o.driver_id]) deliveryMap[o.driver_id] = { count: 0, earnings: 0 };
+        deliveryMap[o.driver_id].count++;
+        deliveryMap[o.driver_id].earnings += parseFloat(o.total_amount||0) * 0.15;
+      });
+    }
+    allDrivers = profiles.map(p => ({ ...p, deliveries: deliveryMap[p.id]?.count||0, earnings: deliveryMap[p.id]?.earnings||0 }));
+    const badge = document.getElementById('driver-count');
+    badge.textContent = allDrivers.length; badge.style.display = 'inline-flex';
+    document.getElementById('d-active').textContent = allDrivers.filter(d=>d.role==='driver').length;
+    document.getElementById('d-suspended').textContent = allDrivers.filter(d=>d.role==='suspended_driver').length;
+    document.getElementById('d-deliveries').textContent = allDrivers.reduce((s,d)=>s+d.deliveries,0);
+    renderDrivers(allDrivers);
   }
 
-  function setFilter(f, btn) { currentFilter = f; document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); renderTable(); }
-  function filterTable(q) { searchQuery = q.toLowerCase(); renderTable(); }
+  function filterDrivers(q) {
+    renderDrivers(allDrivers.filter(d => (d.full_name||'').toLowerCase().includes(q.toLowerCase()) || (d.phone||'').includes(q)));
+  }
 
-  function renderTable() {
-    let data = allEnquiries;
-    if (currentFilter !== 'all') data = data.filter(e => e.status === currentFilter);
-    if (searchQuery) data = data.filter(e => (e.business_name||'').toLowerCase().includes(searchQuery) || (e.suburb||'').toLowerCase().includes(searchQuery) || (e.owner_name||'').toLowerCase().includes(searchQuery));
-    const tbody = document.getElementById('enq-tbody');
-    if (!data.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:48px;color:#8E8E8E"><div style="font-size:32px;margin-bottom:12px">📋</div>No enquiries found</td></tr>`; return; }
-    tbody.innerHTML = data.map(e => `<tr>
-      <td><strong>${e.business_name}</strong></td>
-      <td class="td-muted">${e.owner_name||'—'}</td>
-      <td><a href="https://wa.me/${(e.phone||'').replace(/\D/g,'').replace(/^0/,'27')}" target="_blank" style="color:#06C167;text-decoration:none;font-weight:600">${e.phone||'—'}</a></td>
-      <td class="td-muted">${e.suburb||'—'}</td>
-      <td class="td-muted" style="font-size:12px">${e.cuisine_type||'—'}</td>
-      <td class="td-muted">${timeAgo(e.created_at)}</td>
-      <td>${statusPill(e.status)}</td>
+  function renderDrivers(data) {
+    const tbody = document.getElementById('drivers-tbody');
+    if (!data || !data.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:48px;color:#8E8E8E"><div style="font-size:32px;margin-bottom:12px">🚗</div>No drivers found</td></tr>`; return; }
+    tbody.innerHTML = data.map(d => `<tr>
       <td>
-        ${e.status==='pending'?`<div style="display:flex;gap:6px"><button class="btn btn-green btn-sm" onclick="openApproveModal(${JSON.stringify(e).replace(/"/g,'&quot;')})">✓ Approve</button><button class="btn btn-red btn-sm" onclick="rejectEnquiry('${e.id}','${e.business_name}')">✗ Reject</button></div>`:''}
-        ${e.status==='approved'?`<button class="btn btn-grey btn-sm" onclick="viewCode('${e.id}')">View Code</button>`:''}
-        ${e.status==='rejected'?`<span style="color:#8E8E8E;font-size:12px">Rejected</span>`:''}
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(6,193,103,0.15);display:flex;align-items:center;justify-content:center;font-weight:800;color:#06C167;font-size:14px;flex-shrink:0">${(d.full_name||'?').charAt(0).toUpperCase()}</div>
+          <div><div style="font-weight:700">${d.full_name||'Unknown'}</div><div style="font-size:12px;color:#8E8E8E">${d.id.slice(0,8)}...</div></div>
+        </div>
+      </td>
+      <td>${d.phone?`<a href="https://wa.me/${(d.phone).replace(/\D/g,'').replace(/^0/,'27')}" target="_blank" style="color:#06C167;font-weight:600;text-decoration:none">${d.phone}</a>`:'—'}</td>
+      <td><strong>${d.deliveries}</strong> <span style="color:#8E8E8E;font-size:12px">deliveries</span></td>
+      <td style="color:#06C167;font-weight:700">~${formatZAR(d.earnings)}</td>
+      <td>${statusPill(d.role)}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          ${d.role==='driver'?`<button class="btn btn-red btn-sm" onclick="suspendDriver('${d.id}','${d.full_name||'Driver'}')">🚫 Suspend</button>`:`<button class="btn btn-green btn-sm" onclick="reinstateDriver('${d.id}')">↩ Reinstate</button>`}
+        </div>
       </td>
     </tr>`).join('');
   }
 
-  function openApproveModal(e) {
-    showModal(`
-      <div class="modal-title">Create store for partner</div>
-      <div class="modal-sub">Review and confirm the store details before creating.</div>
-      <div style="background:#F7F7F7;border-radius:10px;padding:14px;margin-bottom:20px;font-size:13px"><strong>${e.business_name}</strong> · ${e.owner_name} · ${e.phone}<br><span style="color:#8E8E8E">${e.suburb} · ${e.cuisine_type||'Not specified'}</span></div>
-      <input type="hidden" id="m-enq-id" value="${e.id}">
-      <input type="hidden" id="m-enq-email" value="${e.email||''}">
-      <input type="hidden" id="m-enq-phone" value="${e.phone||''}">
-      <input type="hidden" id="m-enq-owner" value="${e.owner_name||''}">
-      <div class="modal-form-group"><label>Store Name *</label><input type="text" id="m-store-name" value="${e.business_name}" placeholder="Store name"></div>
-      <div class="modal-form-group"><label>Address *</label><input type="text" id="m-store-address" value="${e.suburb||''}" placeholder="Full street address"></div>
-      <div class="modal-form-group"><label>Delivery Fee (ZAR)</label><input type="number" id="m-delivery-fee" value="25" placeholder="25"></div>
-      <div class="modal-buttons"><button class="btn btn-green" style="flex:1;padding:14px;font-size:15px" onclick="createStoreAndCode()" id="create-btn">Create Store + Generate Code</button></div>
-    `);
+  async function suspendDriver(id, name) {
+    if (!confirm(`Suspend ${name}?`)) return;
+    await sbPatch('profiles', id, { role: 'suspended_driver' }); loadDrivers();
   }
-
-  async function createStoreAndCode() {
-    const btn = document.getElementById('create-btn');
-    const storeName = document.getElementById('m-store-name').value.trim();
-    const address = document.getElementById('m-store-address').value.trim();
-    const deliveryFee = parseFloat(document.getElementById('m-delivery-fee').value) || 25;
-    const enqId = document.getElementById('m-enq-id').value;
-    const email = document.getElementById('m-enq-email').value;
-    const phone = document.getElementById('m-enq-phone').value;
-    const ownerName = document.getElementById('m-enq-owner').value;
-    if (!storeName || !address) { alert('Please fill in store name and address.'); return; }
-    btn.textContent = 'Creating...'; btn.disabled = true;
-    try {
-      const storeRes = await sbPost('stores', { name: storeName, address, delivery_fee: deliveryFee, is_active: false, status: 'onboarding', onboarded_at: new Date().toISOString() });
-      const store = Array.isArray(storeRes) ? storeRes[0] : storeRes;
-      if (!store || !store.id) throw new Error('Store creation failed');
-      await sbPatch('partner_enquiries', enqId, { status: 'approved' });
-      const code = generateCode();
-      const expires = new Date(); expires.setDate(expires.getDate() + 30);
-      await sbPost('store_invites', { code, store_id: store.id, email, is_used: false, expires_at: expires.toISOString() });
-      closeModal();
-      showModal(`
-        <div style="text-align:center">
-          <div style="font-size:40px;margin-bottom:16px">🎉</div>
-          <div class="modal-title">Store Created!</div>
-          <div class="modal-sub">Share this Partner Code with ${ownerName}</div>
-          <div class="code-display">${code}</div>
-          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-            <button class="btn btn-black" onclick="copyToClipboard('${code}',this)">📋 Copy Code</button>
-            <a href="${whatsappLink(phone, code, ownerName, storeName)}" target="_blank" class="btn btn-green" style="text-decoration:none">💬 Send via WhatsApp</a>
-          </div>
-          <p style="font-size:12px;color:#8E8E8E;margin-top:16px">Code expires in 30 days</p>
-          <button class="btn btn-grey" style="margin-top:12px;width:100%" onclick="closeModal();loadEnquiries()">Done</button>
-        </div>
-      `);
-    } catch(err) { alert('Error: ' + err.message); btn.textContent = 'Create Store + Generate Code'; btn.disabled = false; }
-  }
-
-  async function rejectEnquiry(id, name) {
-    if (!confirm(`Reject application from ${name}?`)) return;
-    await sbPatch('partner_enquiries', id, { status: 'rejected' });
-    loadEnquiries();
-  }
-
-  async function viewCode(enqId) {
-    const enq = allEnquiries.find(e => e.id === enqId);
-    if (!enq) return;
-    const codes = await sbGet('store_invites', `?email=eq.${enq.email}&order=created_at.desc&limit=1`);
-    const code = Array.isArray(codes) && codes[0] ? codes[0] : null;
-    showModal(`
-      <div style="text-align:center">
-        <div class="modal-title">${enq.business_name}</div>
-        <div class="modal-sub">${enq.owner_name} · ${enq.phone}</div>
-        ${code ? `
-          <div class="code-display">${code.code}</div>
-          <div style="font-size:13px;color:#8E8E8E;margin-bottom:20px">${code.is_used?'✓ Used on '+formatDate(code.used_at):'Active · Expires '+formatDate(code.expires_at)}</div>
-          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-            <button class="btn btn-black" onclick="copyToClipboard('${code.code}',this)">📋 Copy</button>
-            <a href="${whatsappLink(enq.phone, code.code, enq.owner_name, enq.business_name)}" target="_blank" class="btn btn-green" style="text-decoration:none">💬 WhatsApp</a>
-          </div>` : '<p style="color:#8E8E8E">No invite code found for this partner.</p>'}
-      </div>
-    `);
-  }
-  loadEnquiries();
+  async function reinstateDriver(id) { await sbPatch('profiles', id, { role: 'driver' }); loadDrivers(); }
+  loadDrivers();
 </script>
 </body>
 </html>

@@ -4,8 +4,75 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fetch Admin — Stores</title>
-<link rel="stylesheet" href="/admin-shared.css?v=3">
-<script>const SUPABASE_URL = 'https://errbnpeswpjmdsvehduz.supabase.co';
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+
+:root { --green: #06C167; --black: #000; --white: #fff; --surface: #F7F7F7; --border: #E8E8E8; --muted: #8E8E8E; --danger: #E74C3C; --warning: #F39C12; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--black); display: flex; min-height: 100vh; }
+.sidebar { width: 240px; min-height: 100vh; background: var(--black); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; flex-shrink: 0; }
+.sidebar-logo { font-family: 'Syne', sans-serif; font-weight: 900; font-size: 22px; letter-spacing: -1px; color: var(--white); padding: 28px 24px 4px; }
+.sidebar-logo span { color: var(--green); }
+.sidebar-badge { font-size: 10px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: 1px; padding: 0 24px 24px; }
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; }
+.sidebar-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.6); text-decoration: none; transition: all 0.2s; }
+.sidebar-item:hover { background: rgba(255,255,255,0.08); color: var(--white); }
+.sidebar-item.active { background: rgba(6,193,103,0.15); color: var(--green); font-weight: 700; }
+.sidebar-signout { margin: 16px 12px; padding: 12px; border-radius: 10px; background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.2); color: var(--danger); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.sidebar-signout:hover { background: rgba(231,76,60,0.2); }
+.main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+.topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+.topbar h1 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.content { padding: 32px; flex: 1; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+.stat-card { background: var(--white); border-radius: 16px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.stat-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+.stat-num { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 900; color: var(--black); line-height: 1; }
+.stat-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.table-card { background: var(--white); border-radius: 16px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 24px; }
+.table-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.table-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; }
+table { width: 100%; border-collapse: collapse; }
+thead th { background: var(--surface); padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); white-space: nowrap; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: #fafafa; }
+tbody td { padding: 14px 16px; font-size: 14px; color: var(--black); vertical-align: middle; }
+.td-muted { color: var(--muted); font-size: 13px; }
+.btn { padding: 8px 16px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; text-decoration: none; }
+.btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 7px; }
+.btn-green { background: var(--green); color: var(--white); }
+.btn-green:hover { filter: brightness(0.9); }
+.btn-black { background: var(--black); color: var(--white); }
+.btn-black:hover { background: #222; }
+.btn-red { background: rgba(231,76,60,0.1); color: var(--danger); border: 1px solid rgba(231,76,60,0.2); }
+.btn-red:hover { background: rgba(231,76,60,0.2); }
+.btn-grey { background: var(--surface); color: var(--black); border: 1px solid var(--border); }
+.btn-grey:hover { background: #ebebeb; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.filter-tabs { display: flex; gap: 4px; background: var(--surface); border-radius: 10px; padding: 4px; margin-bottom: 20px; width: fit-content; }
+.filter-tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.2s; border: none; background: none; font-family: 'DM Sans', sans-serif; }
+.filter-tab.active { background: var(--white); color: var(--black); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.search-input { padding: 10px 16px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--white); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--black); outline: none; width: 280px; transition: border-color 0.2s; }
+.search-input:focus { border-color: var(--green); }
+.modal-form-group { margin-bottom: 16px; }
+.modal-form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--black); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.modal-form-group input, .modal-form-group select { width: 100%; padding: 12px 14px; border-radius: 10px; background: var(--surface); border: 1.5px solid var(--border); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--black); outline: none; }
+.modal-form-group input:focus, .modal-form-group select:focus { border-color: var(--green); }
+.modal-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 900; margin-bottom: 6px; }
+.modal-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+.modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+.code-display { font-family: monospace; font-size: 36px; font-weight: 900; color: var(--green); text-align: center; letter-spacing: 4px; background: rgba(6,193,103,0.08); border: 2px dashed rgba(6,193,103,0.3); border-radius: 12px; padding: 20px; margin: 20px 0; }
+.badge { display: inline-flex; align-items: center; justify-content: center; background: var(--green); color: var(--white); border-radius: 999px; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 6px; }
+.badge-red { background: var(--danger); }
+@media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; } .stats-grid { grid-template-columns: 1fr 1fr; } .content { padding: 16px; } .topbar { padding: 16px; } }
+@media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+
+</style>
+<script>
+const SUPABASE_URL = 'https://errbnpeswpjmdsvehduz.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycmJucGVzd3BqbWRzdmVoZHV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDgzMDMsImV4cCI6MjA4NjgyNDMwM30.ZYeZUV6PFs_yATPMUisH9vzXwWaMpBUwEn6Dsy6F0z8';
 
 function getToken() { return localStorage.getItem('fetch_admin_token'); }
@@ -79,6 +146,7 @@ function whatsappLink(phone, code, ownerName, storeName) {
   const msg = encodeURIComponent(`Hi ${ownerName}! 👋 Welcome to Fetch 🎉\n\nYour store *${storeName}* has been approved!\n\nDownload the Fetch app and enter your Partner Code:\n\n*${code}*\n\nYour code expires in 30 days. Reply if you need help!`);
   return `https://wa.me/${num}?text=${msg}`;
 }
+
 </script>
 </head>
 <body>
