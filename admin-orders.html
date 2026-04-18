@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fetch Admin — Orders</title>
+<link rel="stylesheet" href="admin-shared.css">
+</head>
+<body>
+<div id="sidebar-wrap"></div>
+<div class="main">
+  <div class="topbar">
+    <h1>All Orders</h1>
+    <div class="topbar-right">
+      <input type="text" class="search-input" placeholder="Search by ref or address..." oninput="filterOrders(this.value)">
+    </div>
+  </div>
+  <div class="content">
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card"><div class="stat-label">Today's Orders</div><div class="stat-num" id="o-today">—</div></div>
+      <div class="stat-card"><div class="stat-label">Today's Revenue</div><div class="stat-num" id="o-today-rev">—</div></div>
+      <div class="stat-card"><div class="stat-label">This Month</div><div class="stat-num" id="o-month-rev">—</div></div>
+      <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-num" id="o-total-rev">—</div></div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+      <div class="filter-tabs" id="status-tabs" style="margin-bottom:0">
+        <button class="filter-tab active" onclick="setStatusFilter('all',this)">All</button>
+        <button class="filter-tab" onclick="setStatusFilter('pending',this)">Pending</button>
+        <button class="filter-tab" onclick="setStatusFilter('preparing',this)">Preparing</button>
+        <button class="filter-tab" onclick="setStatusFilter('picked_up',this)">On the Way</button>
+        <button class="filter-tab" onclick="setStatusFilter('delivered',this)">Delivered</button>
+        <button class="filter-tab" onclick="setStatusFilter('cancelled',this)">Cancelled</button>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr><th>Order Ref</th><th>Store</th><th>Address</th><th>Total</th><th>Status</th><th>Driver</th><th>Time</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="orders-tbody">
+          <tr><td colspan="8" style="text-align:center;padding:40px;color:#8E8E8E">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="admin-shared.js"></script>
+<script>
+  guardAdmin();
+  document.getElementById('sidebar-wrap').innerHTML = buildSidebar('orders');
+  let allOrders = [];
+  let allStoresMap = {};
+  let statusFilter = 'all';
+  let searchQuery = '';
+
+  async function loadOrders() {
+    const [orders, stores, delivered] = await Promise.all([
+      sbGet('orders', '?order=created_at.desc&limit=200&select=*'),
+      sbGet('stores', '?select=id,name'),
+      sbGet('orders', '?status=eq.delivered&select=total_amount,created_at'),
+    ]);
+    allOrders = Array.isArray(orders) ? orders : [];
+    if (Array.isArray(stores)) stores.forEach(s => { allStoresMap[s.id] = s.name; });
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const todayOrders = allOrders.filter(o => new Date(o.created_at) >= todayStart);
+    const todayDel = delivered.filter ? delivered.filter(o => new Date(o.created_at) >= todayStart) : [];
+    const monthDel = delivered.filter ? delivered.filter(o => new Date(o.created_at) >= monthStart) : [];
+    document.getElementById('o-today').textContent = todayOrders.length;
+    document.getElementById('o-today-rev').textContent = formatZAR(todayDel.reduce((s,o)=>s+parseFloat(o.total_amount||0),0));
+    document.getElementById('o-month-rev').textContent = formatZAR(monthDel.reduce((s,o)=>s+parseFloat(o.total_amount||0),0));
+    document.getElementById('o-total-rev').textContent = formatZAR(Array.isArray(delivered)?delivered.reduce((s,o)=>s+parseFloat(o.total_amount||0),0):0);
+    renderOrders();
+  }
+
+  function setStatusFilter(f, btn) {
+    statusFilter = f;
+    document.querySelectorAll('#status-tabs .filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderOrders();
+  }
+
+  function filterOrders(q) { searchQuery = q.toLowerCase(); renderOrders(); }
+
+  function renderOrders() {
+    let data = allOrders;
+    if (statusFilter !== 'all') data = data.filter(o => o.status === statusFilter);
+    if (searchQuery) data = data.filter(o =>
+      o.id.toLowerCase().includes(searchQuery) ||
+      (o.delivery_address||'').toLowerCase().includes(searchQuery)
+    );
+    const tbody = document.getElementById('orders-tbody');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:48px;color:#8E8E8E"><div style="font-size:32px;margin-bottom:12px">🛒</div>No orders found</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(o => `<tr>
+      <td><strong style="font-family:monospace;font-size:13px">#${o.id.slice(0,8).toUpperCase()}</strong></td>
+      <td>${allStoresMap[o.store_id]||'—'}</td>
+      <td class="td-muted" style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.delivery_address||'—'}</td>
+      <td><strong>${formatZAR(o.total_amount)}</strong></td>
+      <td>${statusPill(o.status)}</td>
+      <td class="td-muted">${o.driver_id ? o.driver_id.slice(0,8)+'...' : '—'}</td>
+      <td class="td-muted">${timeAgo(o.created_at)}</td>
+      <td><button class="btn btn-grey btn-sm" onclick="viewOrder('${o.id}')">Details</button></td>
+    </tr>`).join('');
+  }
+
+  async function viewOrder(orderId) {
+    const items = await sbGet('order_items', `?order_id=eq.${orderId}&select=*,product:products(name,price)`);
+    const order = allOrders.find(o => o.id === orderId);
+    if (!order) return;
+    const itemRows = Array.isArray(items) && items.length
+      ? items.map(i => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #E8E8E8;font-size:14px">
+          <span>${i.quantity}× ${i.product?.name||'Item'}</span>
+          <strong>${formatZAR(i.price * i.quantity)}</strong>
+        </div>`).join('')
+      : '<p style="color:#8E8E8E;font-size:14px">No items found</p>';
+    showModal(`
+      <div class="modal-title">#${orderId.slice(0,8).toUpperCase()}</div>
+      <div class="modal-sub">${timeAgo(order.created_at)} · ${statusPill(order.status)}</div>
+      <div style="background:#F7F7F7;border-radius:10px;padding:14px;margin:16px 0;font-size:13px">
+        <div style="font-weight:700;margin-bottom:4px">📍 Delivery Address</div>
+        <div style="color:#8E8E8E">${order.delivery_address||'—'}</div>
+        ${order.special_instructions ? `<div style="margin-top:8px;color:#F39C12">⚠️ ${order.special_instructions}</div>` : ''}
+      </div>
+      <div style="margin-bottom:16px">${itemRows}</div>
+      <div style="display:flex;justify-content:space-between;padding:12px 0;font-size:15px">
+        <strong>Total</strong>
+        <strong style="color:#06C167">${formatZAR(order.total_amount)}</strong>
+      </div>
+      ${order.payment_reference ? `<div style="font-size:12px;color:#8E8E8E">Payment ref: ${order.payment_reference}</div>` : ''}
+    `);
+  }
+
+  loadOrders();
+</script>
+</body>
+</html>

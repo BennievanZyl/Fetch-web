@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fetch Admin — Invite Codes</title>
+<link rel="stylesheet" href="admin-shared.css">
+</head>
+<body>
+<div id="sidebar-wrap"></div>
+<div class="main">
+  <div class="topbar">
+    <h1>Invite Codes</h1>
+    <div class="topbar-right">
+      <button class="btn btn-green" onclick="openGenerateModal()">+ Generate New Code</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-tab" onclick="setFilter('active',this)">Active</button>
+      <button class="filter-tab" onclick="setFilter('used',this)">Used</button>
+      <button class="filter-tab" onclick="setFilter('expired',this)">Expired</button>
+    </div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr><th>Code</th><th>Store</th><th>Email</th><th>Created</th><th>Expires</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="codes-tbody">
+          <tr><td colspan="7" style="text-align:center;padding:40px;color:#8E8E8E">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="admin-shared.js"></script>
+<script>
+  guardAdmin();
+  document.getElementById('sidebar-wrap').innerHTML = buildSidebar('codes');
+  let allCodes = [];
+  let allStores = [];
+  let currentFilter = 'all';
+
+  function codeStatus(c) {
+    if (c.is_used) return 'used';
+    if (new Date(c.expires_at) < new Date()) return 'expired';
+    return 'active';
+  }
+
+  async function loadCodes() {
+    [allCodes, allStores] = await Promise.all([
+      sbGet('store_invites', '?order=created_at.desc&select=*'),
+      sbGet('stores', '?select=id,name')
+    ]);
+    if (!Array.isArray(allCodes)) allCodes = [];
+    if (!Array.isArray(allStores)) allStores = [];
+    renderCodes();
+  }
+
+  function setFilter(f, btn) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderCodes();
+  }
+
+  function storeName(storeId) {
+    const s = allStores.find(s => s.id === storeId);
+    return s ? s.name : storeId ? storeId.slice(0,8)+'...' : '—';
+  }
+
+  function renderCodes() {
+    let data = allCodes;
+    if (currentFilter !== 'all') data = data.filter(c => codeStatus(c) === currentFilter);
+    const tbody = document.getElementById('codes-tbody');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:48px;color:#8E8E8E"><div style="font-size:32px;margin-bottom:12px">🎟️</div>No codes found</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(c => {
+      const st = codeStatus(c);
+      const pillMap = { active:['#E6F9F0','#0A7A45'], used:['#F7F7F7','#8E8E8E'], expired:['#FDECEA','#B91C1C'] };
+      const [bg,color] = pillMap[st];
+      return `<tr>
+        <td><strong style="font-family:monospace;letter-spacing:2px;font-size:15px;color:#06C167">${c.code}</strong></td>
+        <td>${storeName(c.store_id)}</td>
+        <td class="td-muted">${c.email||'—'}</td>
+        <td class="td-muted">${formatDate(c.created_at)}</td>
+        <td class="td-muted">${formatDate(c.expires_at)}</td>
+        <td><span style="background:${bg};color:${color};padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">${st.charAt(0).toUpperCase()+st.slice(1)}${c.is_used?' · '+formatDate(c.used_at):''}</span></td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-grey btn-sm" onclick="copyToClipboard('${c.code}',this)">📋 Copy</button>
+            ${c.email && !c.is_used ? `<a href="https://wa.me/?text=${encodeURIComponent('Your Fetch Partner Code: '+c.code)}" target="_blank" class="btn btn-green btn-sm" style="text-decoration:none">💬</a>` : ''}
+            ${st === 'active' ? `<button class="btn btn-red btn-sm" onclick="revokeCode('${c.id}','${c.code}')">Revoke</button>` : ''}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function openGenerateModal() {
+    const stores = await sbGet('stores', '?select=id,name&order=name');
+    const options = Array.isArray(stores) ? stores.map(s => `<option value="${s.id}">${s.name}</option>`).join('') : '';
+    showModal(`
+      <div class="modal-title">Generate Partner Code</div>
+      <div class="modal-sub">Create a new invite code for a store partner</div>
+      <div class="modal-form-group">
+        <label>Store *</label>
+        <select id="g-store-id"><option value="">Select a store...</option>${options}</select>
+      </div>
+      <div class="modal-form-group">
+        <label>Partner Email *</label>
+        <input type="email" id="g-email" placeholder="partner@example.com">
+      </div>
+      <div class="modal-form-group">
+        <label>Expires In</label>
+        <select id="g-expires">
+          <option value="7">7 days</option>
+          <option value="14">14 days</option>
+          <option value="30" selected>30 days</option>
+          <option value="60">60 days</option>
+        </select>
+      </div>
+      <div style="background:#F7F7F7;border-radius:10px;padding:14px;margin:16px 0;text-align:center">
+        <div style="font-size:11px;color:#8E8E8E;margin-bottom:6px">Generated code preview</div>
+        <div id="code-preview" style="font-family:monospace;font-size:24px;font-weight:900;color:#06C167;letter-spacing:3px">FETCH-XXXXXX</div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-black" style="flex:1;padding:14px" onclick="generateAndSave()" id="gen-btn">Generate & Save</button>
+      </div>
+    `);
+    const preview = generateCode();
+    document.getElementById('code-preview').textContent = preview;
+    document.getElementById('gen-btn').dataset.code = preview;
+  }
+
+  async function generateAndSave() {
+    const storeId = document.getElementById('g-store-id').value;
+    const email = document.getElementById('g-email').value.trim();
+    const days = parseInt(document.getElementById('g-expires').value);
+    const code = document.getElementById('gen-btn').dataset.code;
+    const btn = document.getElementById('gen-btn');
+    if (!storeId || !email) { alert('Please select a store and enter an email.'); return; }
+    btn.textContent = 'Saving...'; btn.disabled = true;
+    const expires = new Date(); expires.setDate(expires.getDate() + days);
+    await sbPost('store_invites', { code, store_id: storeId, email, is_used: false, expires_at: expires.toISOString() });
+    closeModal();
+    showModal(`
+      <div style="text-align:center">
+        <div style="font-size:40px;margin-bottom:12px">✅</div>
+        <div class="modal-title">Code Generated!</div>
+        <div class="code-display">${code}</div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:12px">
+          <button class="btn btn-black" onclick="copyToClipboard('${code}',this)">📋 Copy Code</button>
+        </div>
+        <button class="btn btn-grey" style="width:100%" onclick="closeModal();loadCodes()">Done</button>
+      </div>
+    `);
+  }
+
+  async function revokeCode(id, code) {
+    if (!confirm(`Revoke code ${code}? The partner will no longer be able to use it.`)) return;
+    await sbPatch('store_invites', id, { expires_at: new Date().toISOString() });
+    loadCodes();
+  }
+
+  loadCodes();
+</script>
+</body>
+</html>

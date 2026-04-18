@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fetch — Delivered to your door</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #06C167;
+    --black: #000000;
+    --white: #FFFFFF;
+    --surface: #F7F7F7;
+    --border: #E8E8E8;
+    --muted: #8E8E8E;
+    --text: #000000;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--white);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 48px; height: 72px;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    transition: all 0.3s ease;
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 900; font-size: 24px; letter-spacing: -1px;
+    color: var(--black); text-decoration: none;
+  }
+  .nav-logo span { color: var(--green); }
+  .nav-links { display: flex; align-items: center; gap: 32px; }
+  .nav-links a {
+    font-size: 14px; font-weight: 500; color: var(--muted);
+    text-decoration: none; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--black); }
+  .nav-cta { display: flex; gap: 12px; }
+  .btn-outline {
+    padding: 10px 20px; border-radius: 10px;
+    border: 1.5px solid var(--black); background: transparent;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+    color: var(--black); cursor: pointer; transition: all 0.2s;
+    text-decoration: none; display: inline-flex; align-items: center;
+  }
+  .btn-outline:hover { background: var(--black); color: var(--white); }
+  .btn-green {
+    padding: 10px 20px; border-radius: 10px;
+    background: var(--green); border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+    color: var(--white); cursor: pointer; transition: all 0.2s;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-green:hover { filter: brightness(0.9); }
+  .btn-black {
+    padding: 14px 28px; border-radius: 12px;
+    background: var(--black); border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700;
+    color: var(--white); cursor: pointer; transition: all 0.2s;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-black:hover { background: #222; }
+  .btn-white {
+    padding: 14px 28px; border-radius: 12px;
+    background: var(--white); border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700;
+    color: var(--black); cursor: pointer; transition: all 0.2s;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-white:hover { background: #f0f0f0; }
+  .btn-green-lg {
+    padding: 16px 36px; border-radius: 14px;
+    background: var(--green); border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 700;
+    color: var(--white); cursor: pointer; transition: all 0.2s;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-green-lg:hover { filter: brightness(0.9); transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    background: var(--black);
+    display: flex; align-items: center;
+    padding: 120px 48px 80px;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg-circle {
+    position: absolute; border-radius: 50%;
+    background: var(--green); opacity: 0.06; pointer-events: none;
+  }
+  .hero-bg-circle-1 { width: 600px; height: 600px; top: -200px; right: -100px; }
+  .hero-bg-circle-2 { width: 300px; height: 300px; bottom: -100px; left: 10%; }
+  .hero-inner {
+    max-width: 1200px; margin: 0 auto; width: 100%;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+  }
+  .hero-left { position: relative; z-index: 2; }
+  .hero-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(6,193,103,0.15); border: 1px solid rgba(6,193,103,0.3);
+    border-radius: 999px; padding: 6px 16px;
+    font-size: 13px; font-weight: 600; color: var(--green);
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-pill-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(48px, 6vw, 80px);
+    font-weight: 900; line-height: 1.0; letter-spacing: -3px;
+    color: var(--white);
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+  .hero h1 .green { color: var(--green); }
+  .hero-sub {
+    font-size: 18px; color: rgba(255,255,255,0.6);
+    line-height: 1.7; margin: 24px 0 40px;
+    max-width: 480px;
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+  .hero-buttons {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    animation: fadeUp 0.6s ease 0.3s both;
+  }
+  .hero-stats {
+    display: flex; gap: 40px; margin-top: 56px;
+    animation: fadeUp 0.6s ease 0.4s both;
+  }
+  .stat-item {}
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px; font-weight: 900; color: var(--white);
+  }
+  .stat-label { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+  .stat-divider { width: 1px; background: rgba(255,255,255,0.1); }
+
+  /* PHONE MOCKUP */
+  .hero-right {
+    display: flex; justify-content: center; align-items: center;
+    position: relative; z-index: 2;
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+  .phone-wrap {
+    position: relative;
+    filter: drop-shadow(0 40px 80px rgba(6,193,103,0.25));
+  }
+  .phone {
+    width: 280px; height: 560px; border-radius: 40px;
+    background: #111; border: 8px solid #222;
+    overflow: hidden; position: relative;
+  }
+  .phone-notch {
+    width: 100px; height: 28px; background: #111;
+    border-radius: 0 0 18px 18px;
+    margin: 0 auto; position: relative; z-index: 10;
+  }
+  .phone-screen {
+    background: #fff; height: 100%;
+    display: flex; flex-direction: column;
+  }
+  .phone-header {
+    background: var(--black); padding: 16px 20px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .phone-header-logo {
+    font-family: 'Syne', sans-serif; font-weight: 900;
+    font-size: 18px; color: var(--white);
+  }
+  .phone-header-logo span { color: var(--green); }
+  .phone-location {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px; color: rgba(255,255,255,0.6);
+  }
+  .phone-search {
+    background: #1a1a1a; margin: 10px 16px;
+    border-radius: 10px; padding: 9px 14px;
+    font-size: 11px; color: rgba(255,255,255,0.4);
+  }
+  .phone-chips {
+    display: flex; gap: 6px; padding: 0 16px 10px; overflow: hidden;
+  }
+  .phone-chip {
+    background: #1a1a1a; border-radius: 999px;
+    padding: 4px 10px; font-size: 10px; color: rgba(255,255,255,0.6);
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .phone-chip.active { background: var(--green); color: white; }
+  .phone-body { background: #f7f7f7; flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .phone-card {
+    background: white; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .phone-card-img {
+    height: 70px; display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 900; letter-spacing: -1px;
+  }
+  .phone-card-img-1 { background: linear-gradient(135deg, #1a1a1a 0%, #333 100%); color: white; font-family: 'Syne',sans-serif; }
+  .phone-card-img-2 { background: linear-gradient(135deg, #0a3d22 0%, #06C167 100%); color: white; font-family: 'Syne',sans-serif; }
+  .phone-card-body { padding: 8px 10px; }
+  .phone-card-name { font-size: 11px; font-weight: 700; color: #000; }
+  .phone-card-meta { font-size: 9px; color: #8e8e8e; margin-top: 2px; }
+  .phone-cta {
+    background: var(--green); margin: 8px 12px 12px;
+    border-radius: 10px; padding: 10px;
+    text-align: center; font-size: 12px; font-weight: 700; color: white;
+  }
+  .phone-glow {
+    position: absolute; width: 300px; height: 300px;
+    background: var(--green); border-radius: 50%;
+    opacity: 0.15; filter: blur(60px);
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: -1;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* HOW IT WORKS */
+  .how {
+    padding: 100px 48px;
+    background: var(--white);
+  }
+  .section-inner { max-width: 1200px; margin: 0 auto; }
+  .section-label {
+    font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--green);
+    margin-bottom: 16px;
+  }
+  .section-h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 900; letter-spacing: -2px; line-height: 1.05;
+    color: var(--black);
+  }
+  .how-steps {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 2px; margin-top: 64px; position: relative;
+  }
+  .how-step {
+    padding: 40px; background: var(--surface); position: relative;
+    transition: background 0.3s;
+  }
+  .how-step:first-child { border-radius: 16px 0 0 16px; }
+  .how-step:last-child { border-radius: 0 16px 16px 0; }
+  .how-step:hover { background: #efefef; }
+  .step-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 56px; font-weight: 900; color: var(--green);
+    line-height: 1; margin-bottom: 16px; letter-spacing: -2px;
+  }
+  .step-icon { font-size: 28px; margin-bottom: 12px; }
+  .step-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 800; color: var(--black);
+    margin-bottom: 10px;
+  }
+  .step-desc { font-size: 15px; color: var(--muted); line-height: 1.6; }
+  .how-connector {
+    position: absolute; top: 50%; right: -1px;
+    width: 2px; height: 40%; background: var(--border);
+    transform: translateY(-50%);
+  }
+
+  /* RESTAURANTS */
+  .restaurants {
+    padding: 100px 48px;
+    background: var(--surface);
+  }
+  .restaurants-header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 48px;
+  }
+  .store-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+  }
+  .store-card {
+    background: var(--white); border-radius: 16px;
+    overflow: hidden; transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    cursor: pointer;
+  }
+  .store-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+  }
+  .store-img {
+    height: 160px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 48px; font-weight: 900;
+    color: rgba(255,255,255,0.9); position: relative; overflow: hidden;
+  }
+  .store-img-1 { background: linear-gradient(135deg, #000 0%, #333 100%); }
+  .store-img-2 { background: linear-gradient(135deg, #0a3d22 0%, #06C167 100%); }
+  .store-img-3 { background: linear-gradient(135deg, #1a0a00 0%, #c0392b 100%); }
+  .store-img-4 { background: linear-gradient(135deg, #001a2e 0%, #2980b9 100%); }
+  .store-img-5 { background: linear-gradient(135deg, #1a1a00 0%, #f39c12 100%); }
+  .store-img-6 { background: linear-gradient(135deg, #0a001a 0%, #8e44ad 100%); }
+  .store-badge {
+    position: absolute; bottom: 10px; left: 10px;
+    background: rgba(0,0,0,0.7); border-radius: 8px;
+    padding: 4px 10px; font-size: 11px; font-weight: 600; color: white;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .store-body { padding: 16px; }
+  .store-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px; font-weight: 800; color: var(--black); margin-bottom: 4px;
+  }
+  .store-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+  .store-meta { display: flex; gap: 8px; }
+  .store-pill {
+    padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
+  }
+  .pill-green { background: rgba(6,193,103,0.1); color: var(--green); }
+  .pill-grey { background: var(--surface); color: var(--muted); }
+  .store-coming {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; font-size: 14px; color: var(--muted);
+  }
+
+  /* COVERAGE */
+  .coverage {
+    padding: 80px 48px;
+    background: var(--white);
+    text-align: center;
+  }
+  .zone-wrap {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 10px; margin-top: 40px; max-width: 800px; margin-left: auto; margin-right: auto;
+  }
+  .zone-pill {
+    padding: 8px 18px; border-radius: 999px;
+    background: var(--surface); color: var(--text);
+    font-size: 14px; font-weight: 500;
+    border: 1px solid var(--border);
+    transition: all 0.2s; cursor: default;
+  }
+  .zone-pill:hover { background: var(--green); color: white; border-color: var(--green); }
+  .coverage-sub { font-size: 15px; color: var(--muted); margin-top: 12px; }
+
+  /* APP DOWNLOAD */
+  .download {
+    background: var(--green);
+    padding: 80px 48px;
+    text-align: center;
+  }
+  .download h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 900; letter-spacing: -2px;
+    color: var(--white); margin-bottom: 16px;
+  }
+  .download p { font-size: 18px; color: rgba(255,255,255,0.8); margin-bottom: 40px; }
+  .download-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .app-btn {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--black); color: var(--white);
+    padding: 14px 24px; border-radius: 14px;
+    text-decoration: none; transition: all 0.2s;
+  }
+  .app-btn:hover { background: #222; transform: translateY(-2px); }
+  .app-btn-icon { font-size: 28px; }
+  .app-btn-text { text-align: left; }
+  .app-btn-sub { font-size: 11px; opacity: 0.7; }
+  .app-btn-name { font-size: 16px; font-weight: 700; }
+
+  /* PARTNER CTA */
+  .partner-cta {
+    background: var(--black);
+    padding: 100px 48px;
+  }
+  .partner-cta-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+  }
+  .partner-cta h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 4vw, 56px);
+    font-weight: 900; letter-spacing: -2px; line-height: 1.05;
+    color: var(--white); margin-bottom: 16px;
+  }
+  .partner-cta h2 span { color: var(--green); }
+  .partner-cta-sub { font-size: 17px; color: rgba(255,255,255,0.6); margin-bottom: 36px; }
+  .partner-bullets { display: flex; flex-direction: column; gap: 14px; margin-bottom: 40px; }
+  .partner-bullet { display: flex; align-items: flex-start; gap: 12px; }
+  .bullet-check {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(6,193,103,0.2); border: 1px solid rgba(6,193,103,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--green); flex-shrink: 0; margin-top: 1px;
+  }
+  .bullet-text { font-size: 15px; color: rgba(255,255,255,0.8); line-height: 1.5; }
+  .partner-cta-right {
+    background: #111; border-radius: 24px; padding: 40px;
+    border: 1px solid #222;
+  }
+  .partner-card-label {
+    font-size: 12px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--green); margin-bottom: 20px;
+  }
+  .partner-card-stat {
+    padding: 20px 0; border-bottom: 1px solid #222;
+  }
+  .partner-card-stat:last-child { border-bottom: none; }
+  .partner-card-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px; font-weight: 900; color: var(--white);
+  }
+  .partner-card-desc { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+  /* FOOTER */
+  footer {
+    background: var(--black); padding: 48px;
+    border-top: 1px solid #222;
+  }
+  .footer-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 24px;
+  }
+  .footer-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 900; font-size: 20px; color: var(--white);
+  }
+  .footer-logo span { color: var(--green); }
+  .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+  .footer-links a {
+    font-size: 13px; color: rgba(255,255,255,0.5);
+    text-decoration: none; transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--white); }
+  .footer-copy { font-size: 13px; color: rgba(255,255,255,0.3); }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    nav { padding: 0 24px; }
+    .nav-links { display: none; }
+    .hero { padding: 100px 24px 60px; }
+    .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+    .hero-right { display: none; }
+    .how { padding: 60px 24px; }
+    .how-steps { grid-template-columns: 1fr; gap: 2px; }
+    .how-step:first-child { border-radius: 16px 16px 0 0; }
+    .how-step:last-child { border-radius: 0 0 16px 16px; }
+    .how-connector { display: none; }
+    .restaurants { padding: 60px 24px; }
+    .restaurants-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .store-grid { grid-template-columns: 1fr; }
+    .coverage { padding: 60px 24px; }
+    .download { padding: 60px 24px; }
+    .partner-cta { padding: 60px 24px; }
+    .partner-cta-inner { grid-template-columns: 1fr; gap: 40px; }
+    footer { padding: 32px 24px; }
+    .footer-inner { flex-direction: column; align-items: flex-start; }
+    .hero-stats { gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">FETCH<span>.</span></a>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#restaurants">Restaurants</a>
+    <a href="#coverage">Coverage</a>
+  </div>
+  <div class="nav-cta">
+    <a href="partners.html" class="btn-outline">Partner with us</a>
+    <a href="#download" class="btn-green">Download App ↓</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-circle hero-bg-circle-1"></div>
+  <div class="hero-bg-circle hero-bg-circle-2"></div>
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-pill">
+        <div class="hero-pill-dot"></div>
+        Now delivering across South Africa
+      </div>
+      <h1>Your favourite<br>food, <span class="green">delivered<br>fast.</span></h1>
+      <p class="hero-sub">Order from the best local restaurants and track your delivery in real time. From order to door in under 40 minutes.</p>
+      <div class="hero-buttons">
+        <a href="#download" class="btn-black">
+          <span>🍎</span> App Store
+        </a>
+        <a href="#download" class="btn-white">
+          <span>🤖</span> Google Play
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-num">500+</div>
+          <div class="stat-label">Orders delivered</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-num">10+</div>
+          <div class="stat-label">Restaurant partners</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-num">5★</div>
+          <div class="stat-label">App store rating</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="phone-wrap">
+        <div class="phone-glow"></div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="phone-header">
+              <div>
+                <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-bottom:2px">Delivering to</div>
+                <div class="phone-location">📍 Sandton, JHB</div>
+              </div>
+              <div class="phone-header-logo">FETCH<span>.</span></div>
+            </div>
+            <div class="phone-search">🔍 Search restaurants...</div>
+            <div class="phone-chips">
+              <div class="phone-chip active">All</div>
+              <div class="phone-chip">Burgers</div>
+              <div class="phone-chip">Pizza</div>
+              <div class="phone-chip">Chicken</div>
+            </div>
+            <div class="phone-body">
+              <div class="phone-card">
+                <div class="phone-card-img phone-card-img-1">STACK</div>
+                <div class="phone-card-body">
+                  <div class="phone-card-name">Stack Burger Co.</div>
+                  <div class="phone-card-meta">25–35 min · Free delivery · ⭐ 4.8</div>
+                </div>
+              </div>
+              <div class="phone-card">
+                <div class="phone-card-img phone-card-img-2">VERDE</div>
+                <div class="phone-card-body">
+                  <div class="phone-card-name">Verde Kitchen</div>
+                  <div class="phone-card-meta">20–30 min · R15 delivery · ⭐ 4.6</div>
+                </div>
+              </div>
+              <div class="phone-cta">View Cart · R185.00 →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="section-inner">
+    <div class="section-label">How it works</div>
+    <h2 class="section-h2">Three steps to<br>your door.</h2>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="step-num">01</div>
+        <div class="step-icon">🔍</div>
+        <div class="step-title">Browse</div>
+        <div class="step-desc">Discover the best local restaurants near you. Filter by cuisine, delivery time or rating.</div>
+        <div class="how-connector"></div>
+      </div>
+      <div class="how-step">
+        <div class="step-num">02</div>
+        <div class="step-icon">🛒</div>
+        <div class="step-title">Order</div>
+        <div class="step-desc">Build your order, choose your delivery time and pay securely via Yoco — card, EFT or cash.</div>
+        <div class="how-connector"></div>
+      </div>
+      <div class="how-step">
+        <div class="step-num">03</div>
+        <div class="step-icon">📍</div>
+        <div class="step-title">Track</div>
+        <div class="step-desc">Watch your driver on the map in real time. Know exactly when your food will arrive.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESTAURANTS -->
+<section class="restaurants" id="restaurants">
+  <div class="section-inner">
+    <div class="restaurants-header">
+      <div>
+        <div class="section-label">Popular near you</div>
+        <h2 class="section-h2">Fresh food,<br>fast delivery.</h2>
+      </div>
+      <a href="#download" class="btn-black">See all restaurants</a>
+    </div>
+    <div class="store-grid" id="store-grid">
+      <div class="store-card">
+        <div class="store-img store-img-1">STACK</div>
+        <div class="store-body">
+          <div class="store-name">Stack Burger Co.</div>
+          <div class="store-desc">Gourmet smash burgers, loaded fries and craft sauces. Made fresh on every order.</div>
+          <div class="store-meta">
+            <span class="store-pill pill-green">Free delivery</span>
+            <span class="store-pill pill-grey">25–35 min</span>
+          </div>
+        </div>
+      </div>
+      <div class="store-card">
+        <div class="store-img store-img-2">VERDE</div>
+        <div class="store-body">
+          <div class="store-name">Verde Kitchen</div>
+          <div class="store-desc">Clean, healthy bowls, wraps and smoothies. Fuel your body with real ingredients.</div>
+          <div class="store-meta">
+            <span class="store-pill pill-green">R15 delivery</span>
+            <span class="store-pill pill-grey">20–30 min</span>
+          </div>
+        </div>
+      </div>
+      <div class="store-card">
+        <div class="store-img store-img-3">FUEGO</div>
+        <div class="store-body">
+          <div class="store-name">Fuego Chicken</div>
+          <div class="store-desc">Flame-grilled chicken, spicy wings and legendary peri-peri sauce. Hot and ready.</div>
+          <div class="store-meta">
+            <span class="store-pill pill-green">R20 delivery</span>
+            <span class="store-pill pill-grey">30–40 min</span>
+          </div>
+        </div>
+      </div>
+      <div class="store-card">
+        <div class="store-img store-img-4">WAVE</div>
+        <div class="store-body">
+          <div class="store-name">Wave Sushi</div>
+          <div class="store-desc">Premium sushi rolls, sashimi and Japanese small plates. Fresh daily, delivered cold.</div>
+          <div class="store-meta">
+            <span class="store-pill pill-green">R25 delivery</span>
+            <span class="store-pill pill-grey">35–45 min</span>
+          </div>
+        </div>
+      </div>
+      <div class="store-card">
+        <div class="store-img store-img-5">CRUST</div>
+        <div class="store-body">
+          <div class="store-name">Crust & Co.</div>
+          <div class="store-desc">Stone-baked artisan pizzas with bold toppings. Classic Italian done the Joburg way.</div>
+          <div class="store-meta">
+            <span class="store-pill pill-green">Free delivery</span>
+            <span class="store-pill pill-grey">25–40 min</span>
+          </div>
+        </div>
+      </div>
+      <div class="store-card">
+        <div class="store-img store-img-6">MELT</div>
+        <div class="store-body">
+          <div class="store-name">Melt Desserts</div>
+          <div class="store-desc">Warm chocolate lava cakes, waffles and gelato. Because every meal deserves a great ending.</div>
+          <div class="store-meta">
+            <span class="store-pill pill-green">R10 delivery</span>
+            <span class="store-pill pill-grey">20–30 min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COVERAGE -->
+<section class="coverage" id="coverage">
+  <div class="section-inner">
+    <div class="section-label">Delivery areas</div>
+    <h2 class="section-h2">Where we deliver</h2>
+    <p class="coverage-sub">And expanding every week. Don't see your area? Apply to partner and help us grow.</p>
+    <div class="zone-wrap">
+      <div class="zone-pill">Sandton</div>
+      <div class="zone-pill">Midrand</div>
+      <div class="zone-pill">Fourways</div>
+      <div class="zone-pill">Randburg</div>
+      <div class="zone-pill">Centurion</div>
+      <div class="zone-pill">Roodepoort</div>
+      <div class="zone-pill">Bryanston</div>
+      <div class="zone-pill">Sunninghill</div>
+      <div class="zone-pill">Paulshof</div>
+      <div class="zone-pill">Morningside</div>
+      <div class="zone-pill">Rivonia</div>
+      <div class="zone-pill">Woodmead</div>
+      <div class="zone-pill">Edenvale</div>
+      <div class="zone-pill">Boksburg</div>
+      <div class="zone-pill">More coming soon →</div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD -->
+<section class="download" id="download">
+  <h2>Ready to order?</h2>
+  <p>Download Fetch and get your first delivery in under 40 minutes.</p>
+  <div class="download-buttons">
+    <a href="#" class="app-btn">
+      <div class="app-btn-icon">🍎</div>
+      <div class="app-btn-text">
+        <div class="app-btn-sub">Download on the</div>
+        <div class="app-btn-name">App Store</div>
+      </div>
+    </a>
+    <a href="#" class="app-btn">
+      <div class="app-btn-icon">▶</div>
+      <div class="app-btn-text">
+        <div class="app-btn-sub">Get it on</div>
+        <div class="app-btn-name">Google Play</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- PARTNER CTA -->
+<section class="partner-cta">
+  <div class="partner-cta-inner">
+    <div>
+      <div class="section-label" style="color:var(--green)">For restaurant owners</div>
+      <h2>Own a restaurant? <span>Partner with Fetch.</span></h2>
+      <p class="partner-cta-sub">Reach thousands of hungry customers in your area. You keep your payments — we handle the platform.</p>
+      <div class="partner-bullets">
+        <div class="partner-bullet">
+          <div class="bullet-check">✓</div>
+          <div class="bullet-text">Keep your own Yoco account — every cent goes directly to you</div>
+        </div>
+        <div class="partner-bullet">
+          <div class="bullet-check">✓</div>
+          <div class="bullet-text">Manage menu, hours and delivery zones from your phone</div>
+        </div>
+        <div class="partner-bullet">
+          <div class="bullet-check">✓</div>
+          <div class="bullet-text">Real-time orders, analytics and customer insights</div>
+        </div>
+        <div class="partner-bullet">
+          <div class="bullet-check">✓</div>
+          <div class="bullet-text">Dedicated onboarding support — go live same day</div>
+        </div>
+      </div>
+      <a href="partners.html" class="btn-green-lg">Apply to Partner →</a>
+    </div>
+    <div class="partner-cta-right">
+      <div class="partner-card-label">Partner stats</div>
+      <div class="partner-card-stat">
+        <div class="partner-card-num">R0</div>
+        <div class="partner-card-desc">Setup fee — free to join the Fetch network</div>
+      </div>
+      <div class="partner-card-stat">
+        <div class="partner-card-num">24hr</div>
+        <div class="partner-card-desc">Application review — we move fast</div>
+      </div>
+      <div class="partner-card-stat">
+        <div class="partner-card-num">100%</div>
+        <div class="partner-card-desc">Your payments — we never touch your money</div>
+      </div>
+      <div class="partner-card-stat">
+        <div class="partner-card-num">Same day</div>
+        <div class="partner-card-desc">Go live once approved and set up</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">FETCH<span>.</span></div>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="partners.html">Partners</a>
+      <a href="admin.html">Admin</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="footer-copy">© 2025 Fetch. Delivering across South Africa.</div>
+  </div>
+</footer>
+
+</body>
+</html>

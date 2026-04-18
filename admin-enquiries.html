@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fetch Admin — Enquiries</title>
+<link rel="stylesheet" href="admin-shared.css">
+</head>
+<body>
+<div id="sidebar-wrap"></div>
+<div class="main">
+  <div class="topbar">
+    <h1>Partner Enquiries <span id="pending-badge" class="badge badge-red" style="display:none"></span></h1>
+    <div class="topbar-right">
+      <input type="text" class="search-input" placeholder="Search by name or suburb..." oninput="filterTable(this.value)">
+    </div>
+  </div>
+  <div class="content">
+    <div class="filter-tabs" id="filter-tabs">
+      <button class="filter-tab active" onclick="setFilter('all', this)">All</button>
+      <button class="filter-tab" onclick="setFilter('pending', this)">Pending</button>
+      <button class="filter-tab" onclick="setFilter('approved', this)">Approved</button>
+      <button class="filter-tab" onclick="setFilter('rejected', this)">Rejected</button>
+    </div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Business</th><th>Owner</th><th>WhatsApp</th><th>Suburb</th>
+            <th>Cuisine</th><th>Applied</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="enq-tbody">
+          <tr><td colspan="8" style="text-align:center;padding:40px;color:#8E8E8E">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="admin-shared.js"></script>
+<script>
+  guardAdmin();
+  document.getElementById('sidebar-wrap').innerHTML = buildSidebar('enquiries');
+
+  let allEnquiries = [];
+  let currentFilter = 'all';
+  let searchQuery = '';
+
+  async function loadEnquiries() {
+    allEnquiries = await sbGet('partner_enquiries', '?order=created_at.desc');
+    if (!Array.isArray(allEnquiries)) allEnquiries = [];
+    const pending = allEnquiries.filter(e => e.status === 'pending').length;
+    const badge = document.getElementById('pending-badge');
+    if (pending > 0) { badge.textContent = pending; badge.style.display = 'inline-flex'; }
+    renderTable();
+  }
+
+  function setFilter(f, btn) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderTable();
+  }
+
+  function filterTable(q) { searchQuery = q.toLowerCase(); renderTable(); }
+
+  function renderTable() {
+    let data = allEnquiries;
+    if (currentFilter !== 'all') data = data.filter(e => e.status === currentFilter);
+    if (searchQuery) data = data.filter(e =>
+      (e.business_name||'').toLowerCase().includes(searchQuery) ||
+      (e.suburb||'').toLowerCase().includes(searchQuery) ||
+      (e.owner_name||'').toLowerCase().includes(searchQuery)
+    );
+    const tbody = document.getElementById('enq-tbody');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:48px;color:#8E8E8E"><div style="font-size:32px;margin-bottom:12px">📋</div>No enquiries found</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(e => `<tr>
+      <td><strong>${e.business_name}</strong></td>
+      <td class="td-muted">${e.owner_name||'—'}</td>
+      <td><a href="https://wa.me/${(e.phone||'').replace(/\D/g,'').replace(/^0/,'27')}" target="_blank" style="color:#06C167;text-decoration:none;font-weight:600">${e.phone||'—'}</a></td>
+      <td class="td-muted">${e.suburb||'—'}</td>
+      <td class="td-muted" style="font-size:12px">${e.cuisine_type||'—'}</td>
+      <td class="td-muted">${timeAgo(e.created_at)}</td>
+      <td>${statusPill(e.status)}</td>
+      <td>
+        ${e.status === 'pending' ? `
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-green btn-sm" onclick="openApproveModal(${JSON.stringify(e).replace(/"/g,'&quot;')})">✓ Approve</button>
+            <button class="btn btn-red btn-sm" onclick="rejectEnquiry('${e.id}','${e.business_name}')">✗ Reject</button>
+          </div>` : ''}
+        ${e.status === 'approved' ? `<button class="btn btn-grey btn-sm" onclick="viewCode('${e.id}')">View Code</button>` : ''}
+        ${e.status === 'rejected' ? `<span style="color:#8E8E8E;font-size:12px">Rejected</span>` : ''}
+      </td>
+    </tr>`).join('');
+  }
+
+  function openApproveModal(e) {
+    showModal(`
+      <div class="modal-title">Create store for partner</div>
+      <div class="modal-sub">Review and confirm the store details before creating.</div>
+      <div style="background:#F7F7F7;border-radius:10px;padding:14px;margin-bottom:20px;font-size:13px">
+        <strong>${e.business_name}</strong> · ${e.owner_name} · ${e.phone}<br>
+        <span style="color:#8E8E8E">${e.suburb} · ${e.cuisine_type||'Not specified'}</span>
+      </div>
+      <input type="hidden" id="m-enq-id" value="${e.id}">
+      <input type="hidden" id="m-enq-email" value="${e.email||''}">
+      <input type="hidden" id="m-enq-phone" value="${e.phone||''}">
+      <input type="hidden" id="m-enq-owner" value="${e.owner_name||''}">
+      <div class="modal-form-group">
+        <label>Store Name *</label>
+        <input type="text" id="m-store-name" value="${e.business_name}" placeholder="Store name">
+      </div>
+      <div class="modal-form-group">
+        <label>Address *</label>
+        <input type="text" id="m-store-address" value="${e.suburb||''}" placeholder="Full street address">
+      </div>
+      <div class="modal-form-group">
+        <label>Delivery Fee (ZAR)</label>
+        <input type="number" id="m-delivery-fee" value="25" placeholder="25">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-green" style="flex:1;padding:14px;font-size:15px" onclick="createStoreAndCode()" id="create-btn">
+          Create Store + Generate Code
+        </button>
+      </div>
+    `);
+  }
+
+  async function createStoreAndCode() {
+    const btn = document.getElementById('create-btn');
+    const storeName = document.getElementById('m-store-name').value.trim();
+    const address = document.getElementById('m-store-address').value.trim();
+    const deliveryFee = parseFloat(document.getElementById('m-delivery-fee').value) || 25;
+    const enqId = document.getElementById('m-enq-id').value;
+    const email = document.getElementById('m-enq-email').value;
+    const phone = document.getElementById('m-enq-phone').value;
+    const ownerName = document.getElementById('m-enq-owner').value;
+    if (!storeName || !address) { alert('Please fill in store name and address.'); return; }
+    btn.textContent = 'Creating...'; btn.disabled = true;
+    try {
+      const storeRes = await sbPost('stores', { name: storeName, address, delivery_fee: deliveryFee, is_active: false, status: 'onboarding', onboarded_at: new Date().toISOString() });
+      const store = Array.isArray(storeRes) ? storeRes[0] : storeRes;
+      if (!store || !store.id) throw new Error('Store creation failed');
+      await sbPatch('partner_enquiries', enqId, { status: 'approved' });
+      const code = generateCode();
+      const expires = new Date(); expires.setDate(expires.getDate() + 30);
+      await sbPost('store_invites', { code, store_id: store.id, email, is_used: false, expires_at: expires.toISOString() });
+      closeModal();
+      showModal(`
+        <div style="text-align:center">
+          <div style="font-size:40px;margin-bottom:16px">🎉</div>
+          <div class="modal-title">Store Created!</div>
+          <div class="modal-sub">Share this Partner Code with ${ownerName}</div>
+          <div class="code-display">${code}</div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-black" onclick="copyToClipboard('${code}',this)">📋 Copy Code</button>
+            <a href="${whatsappLink(phone, code, ownerName, storeName)}" target="_blank" class="btn btn-green" style="text-decoration:none">
+              💬 Send via WhatsApp
+            </a>
+          </div>
+          <p style="font-size:12px;color:#8E8E8E;margin-top:16px">Code expires in 30 days</p>
+          <button class="btn btn-grey" style="margin-top:12px;width:100%" onclick="closeModal();loadEnquiries()">Done</button>
+        </div>
+      `);
+    } catch(err) {
+      alert('Error: ' + err.message);
+      btn.textContent = 'Create Store + Generate Code'; btn.disabled = false;
+    }
+  }
+
+  async function rejectEnquiry(id, name) {
+    if (!confirm(`Reject application from ${name}?`)) return;
+    await sbPatch('partner_enquiries', id, { status: 'rejected' });
+    loadEnquiries();
+  }
+
+  async function viewCode(enqId) {
+    const enq = allEnquiries.find(e => e.id === enqId);
+    if (!enq) return;
+    const codes = await sbGet('store_invites', `?email=eq.${enq.email}&order=created_at.desc&limit=1`);
+    const code = Array.isArray(codes) && codes[0] ? codes[0] : null;
+    showModal(`
+      <div style="text-align:center">
+        <div class="modal-title">${enq.business_name}</div>
+        <div class="modal-sub">${enq.owner_name} · ${enq.phone}</div>
+        ${code ? `
+          <div class="code-display">${code.code}</div>
+          <div style="font-size:13px;color:#8E8E8E;margin-bottom:20px">
+            ${code.is_used ? '✓ Used on ' + formatDate(code.used_at) : 'Active · Expires ' + formatDate(code.expires_at)}
+          </div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-black" onclick="copyToClipboard('${code.code}',this)">📋 Copy</button>
+            <a href="${whatsappLink(enq.phone, code.code, enq.owner_name, enq.business_name)}" target="_blank" class="btn btn-green" style="text-decoration:none">💬 WhatsApp</a>
+          </div>` : '<p style="color:#8E8E8E">No invite code found for this partner.</p>'}
+      </div>
+    `);
+  }
+
+  loadEnquiries();
+</script>
+</body>
+</html>

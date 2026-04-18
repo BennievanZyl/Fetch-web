@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fetch Admin — Stores</title>
+<link rel="stylesheet" href="admin-shared.css">
+</head>
+<body>
+<div id="sidebar-wrap"></div>
+<div class="main">
+  <div class="topbar">
+    <h1>Stores <span id="store-count" class="badge" style="display:none"></span></h1>
+    <div class="topbar-right">
+      <input type="text" class="search-input" placeholder="Search stores..." oninput="filterStores(this.value)">
+    </div>
+  </div>
+  <div class="content">
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
+      <div class="stat-card"><div class="stat-label">Total Stores</div><div class="stat-num" id="s-total">—</div></div>
+      <div class="stat-card"><div class="stat-label" style="color:#06C167">Live</div><div class="stat-num" id="s-live" style="color:#06C167">—</div></div>
+      <div class="stat-card"><div class="stat-label" style="color:#F39C12">Onboarding</div><div class="stat-num" id="s-onboard" style="color:#F39C12">—</div></div>
+      <div class="stat-card"><div class="stat-label" style="color:#E74C3C">Paused/Suspended</div><div class="stat-num" id="s-paused" style="color:#E74C3C">—</div></div>
+    </div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr><th>Store Name</th><th>Address</th><th>Status</th><th>Delivery Fee</th><th>Created</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="stores-tbody">
+          <tr><td colspan="6" style="text-align:center;padding:40px;color:#8E8E8E">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="admin-shared.js"></script>
+<script>
+  guardAdmin();
+  document.getElementById('sidebar-wrap').innerHTML = buildSidebar('stores');
+  let allStores = [];
+
+  async function loadStores() {
+    allStores = await sbGet('stores', '?order=created_at.desc&select=*');
+    if (!Array.isArray(allStores)) allStores = [];
+    const count = document.getElementById('store-count');
+    count.textContent = allStores.length; count.style.display = 'inline-flex';
+    document.getElementById('s-total').textContent = allStores.length;
+    document.getElementById('s-live').textContent = allStores.filter(s=>s.status==='active').length;
+    document.getElementById('s-onboard').textContent = allStores.filter(s=>s.status==='onboarding').length;
+    document.getElementById('s-paused').textContent = allStores.filter(s=>s.status==='paused'||s.status==='suspended').length;
+    renderStores(allStores);
+  }
+
+  function filterStores(q) {
+    const filtered = allStores.filter(s =>
+      (s.name||'').toLowerCase().includes(q.toLowerCase()) ||
+      (s.address||'').toLowerCase().includes(q.toLowerCase())
+    );
+    renderStores(filtered);
+  }
+
+  function renderStores(data) {
+    const tbody = document.getElementById('stores-tbody');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:48px;color:#8E8E8E"><div style="font-size:32px;margin-bottom:12px">🏪</div>No stores found</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(s => `<tr>
+      <td><strong>${s.name}</strong>${s.description ? `<div style="font-size:12px;color:#8E8E8E;margin-top:2px">${s.description.slice(0,60)}...</div>` : ''}</td>
+      <td class="td-muted">${s.address||'—'}</td>
+      <td>${statusPill(s.status||'onboarding')}</td>
+      <td>${s.delivery_fee==0?'<span style="color:#06C167;font-weight:700">Free</span>':formatZAR(s.delivery_fee)}</td>
+      <td class="td-muted">${formatDate(s.created_at)}</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${s.status !== 'active' ? `<button class="btn btn-green btn-sm" onclick="activateStore('${s.id}')">▶ Activate</button>` : ''}
+          ${s.status === 'active' ? `<button class="btn btn-grey btn-sm" onclick="pauseStore('${s.id}')">⏸ Pause</button>` : ''}
+          ${s.status !== 'suspended' ? `<button class="btn btn-red btn-sm" onclick="suspendStore('${s.id}','${s.name}')">🚫 Suspend</button>` : ''}
+          ${s.status === 'suspended' ? `<button class="btn btn-green btn-sm" onclick="activateStore('${s.id}')">↩ Reinstate</button>` : ''}
+          <button class="btn btn-grey btn-sm" onclick="viewProducts('${s.id}','${s.name}')">🍽️ Menu</button>
+        </div>
+      </td>
+    </tr>`).join('');
+  }
+
+  async function activateStore(id) {
+    await sbPatch('stores', id, { is_active: true, status: 'active', activated_at: new Date().toISOString() });
+    loadStores();
+  }
+  async function pauseStore(id) {
+    await sbPatch('stores', id, { is_active: false, status: 'paused', paused_at: new Date().toISOString() });
+    loadStores();
+  }
+  async function suspendStore(id, name) {
+    if (!confirm(`Suspend ${name}? They will no longer appear on Fetch.`)) return;
+    await sbPatch('stores', id, { is_active: false, status: 'suspended', suspended_at: new Date().toISOString() });
+    loadStores();
+  }
+
+  async function viewProducts(storeId, storeName) {
+    const products = await sbGet('products', `?store_id=eq.${storeId}&order=category,name`);
+    const rows = Array.isArray(products) && products.length
+      ? products.map(p => `<tr>
+          <td><strong>${p.name}</strong></td>
+          <td class="td-muted">${p.category||'General'}</td>
+          <td><strong>${formatZAR(p.price)}</strong></td>
+          <td>${p.is_available ? '<span style="color:#06C167;font-weight:700">✓ Available</span>' : '<span style="color:#E74C3C">✗ Off</span>'}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="4" style="text-align:center;padding:24px;color:#8E8E8E">No products added yet</td></tr>';
+    showModal(`
+      <div class="modal-title">🍽️ ${storeName} Menu</div>
+      <div class="modal-sub">${Array.isArray(products) ? products.length : 0} products</div>
+      <div style="overflow-x:auto;max-height:400px;overflow-y:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:#F7F7F7">
+            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#8E8E8E">Name</th>
+            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#8E8E8E">Category</th>
+            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#8E8E8E">Price</th>
+            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#8E8E8E">Status</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `);
+  }
+
+  loadStores();
+</script>
+</body>
+</html>
