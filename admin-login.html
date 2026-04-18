@@ -7,77 +7,26 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --green: #06C167; --black: #000; --white: #fff;
-    --surface: #F7F7F7; --border: #E8E8E8; --muted: #8E8E8E;
-    --danger: #E74C3C;
-  }
+  :root { --green: #06C167; --black: #000; --white: #fff; --muted: #8E8E8E; --danger: #E74C3C; }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: #0a0a0a;
-    min-height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .login-wrap {
-    width: 100%; max-width: 420px; padding: 24px;
-  }
-  .logo {
-    font-family: 'Syne', sans-serif; font-weight: 900;
-    font-size: 32px; letter-spacing: -1px;
-    color: var(--white); text-align: center; margin-bottom: 8px;
-  }
+  body { font-family: 'DM Sans', sans-serif; background: #0a0a0a; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .login-wrap { width: 100%; max-width: 420px; padding: 24px; }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 900; font-size: 32px; letter-spacing: -1px; color: var(--white); text-align: center; margin-bottom: 8px; }
   .logo span { color: var(--green); }
-  .admin-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(6,193,103,0.15); border: 1px solid rgba(6,193,103,0.3);
-    border-radius: 999px; padding: 4px 14px;
-    font-size: 12px; font-weight: 700; color: var(--green);
-    margin: 0 auto 32px; display: flex; justify-content: center; width: fit-content;
-    margin-left: auto; margin-right: auto;
-  }
-  .card {
-    background: #111; border: 1px solid #222;
-    border-radius: 20px; padding: 40px;
-  }
-  .card h2 {
-    font-family: 'Syne', sans-serif; font-size: 22px;
-    font-weight: 800; color: var(--white); margin-bottom: 6px;
-  }
+  .admin-badge { display: flex; justify-content: center; align-items: center; gap: 6px; background: rgba(6,193,103,0.15); border: 1px solid rgba(6,193,103,0.3); border-radius: 999px; padding: 4px 14px; font-size: 12px; font-weight: 700; color: var(--green); width: fit-content; margin: 0 auto 32px; }
+  .card { background: #111; border: 1px solid #222; border-radius: 20px; padding: 40px; }
+  .card h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--white); margin-bottom: 6px; }
   .card p { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
   .form-group { margin-bottom: 16px; }
-  .form-group label {
-    display: block; font-size: 12px; font-weight: 700;
-    color: rgba(255,255,255,0.5); text-transform: uppercase;
-    letter-spacing: 0.6px; margin-bottom: 8px;
-  }
-  .form-group input {
-    width: 100%; padding: 14px 16px; border-radius: 10px;
-    background: #1a1a1a; border: 1.5px solid #222;
-    font-family: 'DM Sans', sans-serif; font-size: 15px;
-    color: var(--white); outline: none; transition: border-color 0.2s;
-  }
+  .form-group label { display: block; font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+  .form-group input { width: 100%; padding: 14px 16px; border-radius: 10px; background: #1a1a1a; border: 1.5px solid #222; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--white); outline: none; transition: border-color 0.2s; }
   .form-group input:focus { border-color: var(--green); }
   .form-group input::placeholder { color: #444; }
-  .error-msg {
-    background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.3);
-    border-radius: 10px; padding: 12px 16px;
-    font-size: 13px; color: var(--danger);
-    margin-bottom: 16px; display: none;
-  }
-  .btn-login {
-    width: 100%; padding: 16px; border-radius: 12px;
-    background: var(--green); border: none;
-    font-family: 'DM Sans', sans-serif; font-size: 16px;
-    font-weight: 700; color: var(--white);
-    cursor: pointer; transition: all 0.2s; margin-top: 8px;
-  }
+  .error-msg { background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.3); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--danger); margin-bottom: 16px; display: none; }
+  .btn-login { width: 100%; padding: 16px; border-radius: 12px; background: var(--green); border: none; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; color: var(--white); cursor: pointer; transition: all 0.2s; margin-top: 8px; }
   .btn-login:hover { filter: brightness(0.9); }
   .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
-  .back-link {
-    display: block; text-align: center; margin-top: 20px;
-    font-size: 13px; color: var(--muted); text-decoration: none;
-  }
+  .back-link { display: block; text-align: center; margin-top: 20px; font-size: 13px; color: var(--muted); text-decoration: none; }
   .back-link:hover { color: var(--white); }
 </style>
 </head>
@@ -94,24 +43,18 @@
     </div>
     <div class="form-group">
       <label>Password</label>
-      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"
-        onkeydown="if(event.key==='Enter') login()">
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter') login()">
     </div>
     <div class="error-msg" id="error-msg"></div>
     <button class="btn-login" id="login-btn" onclick="login()">Sign In →</button>
   </div>
-  <a href="index.html" class="back-link">← Back to fetch-sa.co.za</a>
+  <a href="/" class="back-link">← Back to fetch-sa.co.za</a>
 </div>
-
 <script>
   const SUPABASE_URL = 'https://errbnpeswpjmdsvehduz.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycmJucGVzd3BqbWRzdmVoZHV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDgzMDMsImV4cCI6MjA4NjgyNDMwM30.ZYeZUV6PFs_yATPMUisH9vzXwWaMpBUwEn6Dsy6F0z8';
-
-  function showError(msg) {
-    const el = document.getElementById('error-msg');
-    el.textContent = msg; el.style.display = 'block';
-  }
-
+  if (localStorage.getItem('fetch_admin_token')) window.location.href = '/admin/dashboard';
+  function showError(msg) { const el = document.getElementById('error-msg'); el.textContent = msg; el.style.display = 'block'; }
   async function login() {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
@@ -121,19 +64,15 @@
     btn.textContent = 'Signing in...'; btn.disabled = true;
     try {
       const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
         body: JSON.stringify({ email, password })
       });
       const data = await res.json();
       if (!res.ok) { showError(data.error_description || 'Invalid email or password.'); btn.textContent = 'Sign In →'; btn.disabled = false; return; }
       localStorage.setItem('fetch_admin_token', data.access_token);
       localStorage.setItem('fetch_admin_user', JSON.stringify(data.user));
-      window.location.href = 'admin-dashboard.html';
-    } catch(e) {
-      showError('Network error. Please try again.');
-      btn.textContent = 'Sign In →'; btn.disabled = false;
-    }
+      window.location.href = '/admin/dashboard';
+    } catch(e) { showError('Network error. Please try again.'); btn.textContent = 'Sign In →'; btn.disabled = false; }
   }
 </script>
 </body>
