@@ -4,7 +4,82 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fetch Admin — Enquiries</title>
-<link rel="stylesheet" href="admin-shared.css">
+<link rel="stylesheet" href="/admin-shared.css?v=3">
+<script>const SUPABASE_URL = 'https://errbnpeswpjmdsvehduz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycmJucGVzd3BqbWRzdmVoZHV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDgzMDMsImV4cCI6MjA4NjgyNDMwM30.ZYeZUV6PFs_yATPMUisH9vzXwWaMpBUwEn6Dsy6F0z8';
+
+function getToken() { return localStorage.getItem('fetch_admin_token'); }
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${getToken() || SUPABASE_KEY}` };
+}
+function guardAdmin() { if (!getToken()) { window.location.href = '/admin'; return false; } return true; }
+function signOut() { localStorage.removeItem('fetch_admin_token'); localStorage.removeItem('fetch_admin_user'); window.location.href = '/admin'; }
+
+async function sbGet(table, params = '') {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${params}`, { headers: authHeaders() });
+  return res.json();
+}
+async function sbPost(table, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, { method: 'POST', headers: { ...authHeaders(), 'Prefer': 'return=representation' }, body: JSON.stringify(body) });
+  return res.json();
+}
+async function sbPatch(table, id, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'PATCH', headers: { ...authHeaders(), 'Prefer': 'return=representation' }, body: JSON.stringify(body) });
+  return res.json();
+}
+async function sbDelete(table, id) { await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'DELETE', headers: authHeaders() }); }
+
+function generateCode() { return 'FETCH-' + Math.random().toString(36).substring(2, 8).toUpperCase(); }
+function formatZAR(amount) { return 'R' + parseFloat(amount || 0).toFixed(2); }
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function statusPill(status) {
+  const map = { pending:['#FFF8E6','#9A6500'], confirmed:['#E6F0FB','#1A5FA5'], preparing:['#FFF8E6','#9A6500'], ready:['#F3E6FB','#6B21A8'], picked_up:['#E6F9F0','#0A7A45'], delivered:['#E6F9F0','#0A7A45'], cancelled:['#FDECEA','#B91C1C'], active:['#E6F9F0','#0A7A45'], onboarding:['#F7F7F7','#8E8E8E'], paused:['#FFF8E6','#9A6500'], suspended:['#FDECEA','#B91C1C'], approved:['#E6F9F0','#0A7A45'], rejected:['#FDECEA','#B91C1C'], driver:['#E6F9F0','#0A7A45'], suspended_driver:['#FDECEA','#B91C1C'] };
+  const [bg, color] = map[status] || ['#F7F7F7','#8E8E8E'];
+  const label = status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return `<span style="background:${bg};color:${color};padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap">${label}</span>`;
+}
+function buildSidebar(activePage) {
+  const pages = [
+    { id:'dashboard', icon:'📊', label:'Dashboard',    href:'/admin/dashboard' },
+    { id:'enquiries', icon:'📋', label:'Enquiries',    href:'/admin/enquiries' },
+    { id:'stores',    icon:'🏪', label:'Stores',       href:'/admin/stores' },
+    { id:'codes',     icon:'🎟️', label:'Invite Codes', href:'/admin/codes' },
+    { id:'orders',    icon:'🛒', label:'Orders',       href:'/admin/orders' },
+    { id:'drivers',   icon:'🚗', label:'Drivers',      href:'/admin/drivers' },
+  ];
+  const items = pages.map(p => `<a href="${p.href}" class="sidebar-item ${p.id===activePage?'active':''}"><span>${p.icon}</span><span>${p.label}</span></a>`).join('');
+  return `<aside class="sidebar"><div class="sidebar-logo">FETCH<span>.</span></div><div class="sidebar-badge">Admin</div><nav class="sidebar-nav">${items}</nav><button class="sidebar-signout" onclick="signOut()">Sign Out</button></aside>`;
+}
+function showModal(html) {
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto';
+  overlay.innerHTML = `<div style="background:#fff;border-radius:20px;padding:40px;max-width:520px;width:100%;position:relative">${html}<button onclick="closeModal()" style="position:absolute;top:16px;right:16px;background:#f7f7f7;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button></div>`;
+  overlay.addEventListener('click', e => { if(e.target===overlay) closeModal(); });
+  document.body.appendChild(overlay);
+}
+function closeModal() { const el = document.getElementById('modal-overlay'); if(el) el.remove(); }
+function copyToClipboard(text, btn) {
+  navigator.clipboard.writeText(text).then(() => { const o=btn.textContent; btn.textContent='Copied! ✓'; btn.style.background='#06C167'; btn.style.color='#fff'; setTimeout(()=>{btn.textContent=o;btn.style.background='';btn.style.color='';},2000); });
+}
+function whatsappLink(phone, code, ownerName, storeName) {
+  const num = (phone||'').replace(/\D/g,'').replace(/^0/,'27');
+  const msg = encodeURIComponent(`Hi ${ownerName}! 👋 Welcome to Fetch 🎉\n\nYour store *${storeName}* has been approved!\n\nDownload the Fetch app and enter your Partner Code:\n\n*${code}*\n\nYour code expires in 30 days. Reply if you need help!`);
+  return `https://wa.me/${num}?text=${msg}`;
+}
+</script>
 </head>
 <body>
 <div id="sidebar-wrap"></div>
@@ -16,36 +91,24 @@
     </div>
   </div>
   <div class="content">
-    <div class="filter-tabs" id="filter-tabs">
-      <button class="filter-tab active" onclick="setFilter('all', this)">All</button>
-      <button class="filter-tab" onclick="setFilter('pending', this)">Pending</button>
-      <button class="filter-tab" onclick="setFilter('approved', this)">Approved</button>
-      <button class="filter-tab" onclick="setFilter('rejected', this)">Rejected</button>
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-tab" onclick="setFilter('pending',this)">Pending</button>
+      <button class="filter-tab" onclick="setFilter('approved',this)">Approved</button>
+      <button class="filter-tab" onclick="setFilter('rejected',this)">Rejected</button>
     </div>
     <div class="table-card">
       <table>
-        <thead>
-          <tr>
-            <th>Business</th><th>Owner</th><th>WhatsApp</th><th>Suburb</th>
-            <th>Cuisine</th><th>Applied</th><th>Status</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="enq-tbody">
-          <tr><td colspan="8" style="text-align:center;padding:40px;color:#8E8E8E">Loading...</td></tr>
-        </tbody>
+        <thead><tr><th>Business</th><th>Owner</th><th>WhatsApp</th><th>Suburb</th><th>Cuisine</th><th>Applied</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="enq-tbody"><tr><td colspan="8" style="text-align:center;padding:40px;color:#8E8E8E">Loading...</td></tr></tbody>
       </table>
     </div>
   </div>
 </div>
-
-<script src="admin-shared.js"></script>
 <script>
   guardAdmin();
   document.getElementById('sidebar-wrap').innerHTML = buildSidebar('enquiries');
-
-  let allEnquiries = [];
-  let currentFilter = 'all';
-  let searchQuery = '';
+  let allEnquiries = [], currentFilter = 'all', searchQuery = '';
 
   async function loadEnquiries() {
     allEnquiries = await sbGet('partner_enquiries', '?order=created_at.desc');
@@ -56,28 +119,15 @@
     renderTable();
   }
 
-  function setFilter(f, btn) {
-    currentFilter = f;
-    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    renderTable();
-  }
-
+  function setFilter(f, btn) { currentFilter = f; document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); renderTable(); }
   function filterTable(q) { searchQuery = q.toLowerCase(); renderTable(); }
 
   function renderTable() {
     let data = allEnquiries;
     if (currentFilter !== 'all') data = data.filter(e => e.status === currentFilter);
-    if (searchQuery) data = data.filter(e =>
-      (e.business_name||'').toLowerCase().includes(searchQuery) ||
-      (e.suburb||'').toLowerCase().includes(searchQuery) ||
-      (e.owner_name||'').toLowerCase().includes(searchQuery)
-    );
+    if (searchQuery) data = data.filter(e => (e.business_name||'').toLowerCase().includes(searchQuery) || (e.suburb||'').toLowerCase().includes(searchQuery) || (e.owner_name||'').toLowerCase().includes(searchQuery));
     const tbody = document.getElementById('enq-tbody');
-    if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:48px;color:#8E8E8E"><div style="font-size:32px;margin-bottom:12px">📋</div>No enquiries found</td></tr>`;
-      return;
-    }
+    if (!data.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:48px;color:#8E8E8E"><div style="font-size:32px;margin-bottom:12px">📋</div>No enquiries found</td></tr>`; return; }
     tbody.innerHTML = data.map(e => `<tr>
       <td><strong>${e.business_name}</strong></td>
       <td class="td-muted">${e.owner_name||'—'}</td>
@@ -87,13 +137,9 @@
       <td class="td-muted">${timeAgo(e.created_at)}</td>
       <td>${statusPill(e.status)}</td>
       <td>
-        ${e.status === 'pending' ? `
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-green btn-sm" onclick="openApproveModal(${JSON.stringify(e).replace(/"/g,'&quot;')})">✓ Approve</button>
-            <button class="btn btn-red btn-sm" onclick="rejectEnquiry('${e.id}','${e.business_name}')">✗ Reject</button>
-          </div>` : ''}
-        ${e.status === 'approved' ? `<button class="btn btn-grey btn-sm" onclick="viewCode('${e.id}')">View Code</button>` : ''}
-        ${e.status === 'rejected' ? `<span style="color:#8E8E8E;font-size:12px">Rejected</span>` : ''}
+        ${e.status==='pending'?`<div style="display:flex;gap:6px"><button class="btn btn-green btn-sm" onclick="openApproveModal(${JSON.stringify(e).replace(/"/g,'&quot;')})">✓ Approve</button><button class="btn btn-red btn-sm" onclick="rejectEnquiry('${e.id}','${e.business_name}')">✗ Reject</button></div>`:''}
+        ${e.status==='approved'?`<button class="btn btn-grey btn-sm" onclick="viewCode('${e.id}')">View Code</button>`:''}
+        ${e.status==='rejected'?`<span style="color:#8E8E8E;font-size:12px">Rejected</span>`:''}
       </td>
     </tr>`).join('');
   }
@@ -102,31 +148,15 @@
     showModal(`
       <div class="modal-title">Create store for partner</div>
       <div class="modal-sub">Review and confirm the store details before creating.</div>
-      <div style="background:#F7F7F7;border-radius:10px;padding:14px;margin-bottom:20px;font-size:13px">
-        <strong>${e.business_name}</strong> · ${e.owner_name} · ${e.phone}<br>
-        <span style="color:#8E8E8E">${e.suburb} · ${e.cuisine_type||'Not specified'}</span>
-      </div>
+      <div style="background:#F7F7F7;border-radius:10px;padding:14px;margin-bottom:20px;font-size:13px"><strong>${e.business_name}</strong> · ${e.owner_name} · ${e.phone}<br><span style="color:#8E8E8E">${e.suburb} · ${e.cuisine_type||'Not specified'}</span></div>
       <input type="hidden" id="m-enq-id" value="${e.id}">
       <input type="hidden" id="m-enq-email" value="${e.email||''}">
       <input type="hidden" id="m-enq-phone" value="${e.phone||''}">
       <input type="hidden" id="m-enq-owner" value="${e.owner_name||''}">
-      <div class="modal-form-group">
-        <label>Store Name *</label>
-        <input type="text" id="m-store-name" value="${e.business_name}" placeholder="Store name">
-      </div>
-      <div class="modal-form-group">
-        <label>Address *</label>
-        <input type="text" id="m-store-address" value="${e.suburb||''}" placeholder="Full street address">
-      </div>
-      <div class="modal-form-group">
-        <label>Delivery Fee (ZAR)</label>
-        <input type="number" id="m-delivery-fee" value="25" placeholder="25">
-      </div>
-      <div class="modal-buttons">
-        <button class="btn btn-green" style="flex:1;padding:14px;font-size:15px" onclick="createStoreAndCode()" id="create-btn">
-          Create Store + Generate Code
-        </button>
-      </div>
+      <div class="modal-form-group"><label>Store Name *</label><input type="text" id="m-store-name" value="${e.business_name}" placeholder="Store name"></div>
+      <div class="modal-form-group"><label>Address *</label><input type="text" id="m-store-address" value="${e.suburb||''}" placeholder="Full street address"></div>
+      <div class="modal-form-group"><label>Delivery Fee (ZAR)</label><input type="number" id="m-delivery-fee" value="25" placeholder="25"></div>
+      <div class="modal-buttons"><button class="btn btn-green" style="flex:1;padding:14px;font-size:15px" onclick="createStoreAndCode()" id="create-btn">Create Store + Generate Code</button></div>
     `);
   }
 
@@ -158,18 +188,13 @@
           <div class="code-display">${code}</div>
           <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
             <button class="btn btn-black" onclick="copyToClipboard('${code}',this)">📋 Copy Code</button>
-            <a href="${whatsappLink(phone, code, ownerName, storeName)}" target="_blank" class="btn btn-green" style="text-decoration:none">
-              💬 Send via WhatsApp
-            </a>
+            <a href="${whatsappLink(phone, code, ownerName, storeName)}" target="_blank" class="btn btn-green" style="text-decoration:none">💬 Send via WhatsApp</a>
           </div>
           <p style="font-size:12px;color:#8E8E8E;margin-top:16px">Code expires in 30 days</p>
           <button class="btn btn-grey" style="margin-top:12px;width:100%" onclick="closeModal();loadEnquiries()">Done</button>
         </div>
       `);
-    } catch(err) {
-      alert('Error: ' + err.message);
-      btn.textContent = 'Create Store + Generate Code'; btn.disabled = false;
-    }
+    } catch(err) { alert('Error: ' + err.message); btn.textContent = 'Create Store + Generate Code'; btn.disabled = false; }
   }
 
   async function rejectEnquiry(id, name) {
@@ -189,9 +214,7 @@
         <div class="modal-sub">${enq.owner_name} · ${enq.phone}</div>
         ${code ? `
           <div class="code-display">${code.code}</div>
-          <div style="font-size:13px;color:#8E8E8E;margin-bottom:20px">
-            ${code.is_used ? '✓ Used on ' + formatDate(code.used_at) : 'Active · Expires ' + formatDate(code.expires_at)}
-          </div>
+          <div style="font-size:13px;color:#8E8E8E;margin-bottom:20px">${code.is_used?'✓ Used on '+formatDate(code.used_at):'Active · Expires '+formatDate(code.expires_at)}</div>
           <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
             <button class="btn btn-black" onclick="copyToClipboard('${code.code}',this)">📋 Copy</button>
             <a href="${whatsappLink(enq.phone, code.code, enq.owner_name, enq.business_name)}" target="_blank" class="btn btn-green" style="text-decoration:none">💬 WhatsApp</a>
@@ -199,7 +222,6 @@
       </div>
     `);
   }
-
   loadEnquiries();
 </script>
 </body>
