@@ -1,0 +1,15 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "routes": [
+    { "src": "/", "dest": "/index.html" },
+    { "src": "/partners", "dest": "/partners.html" },
+    { "src": "/admin", "dest": "/admin-login.html" },
+    { "src": "/admin/dashboard", "dest": "/admin-dashboard.html" },
+    { "src": "/admin/enquiries", "dest": "/admin-enquiries.html" },
+    { "src": "/admin/stores", "dest": "/admin-stores.html" },
+    { "src": "/admin/codes", "dest": "/admin-codes.html" },
+    { "src": "/admin/orders", "dest": "/admin-orders.html" },
+    { "src": "/admin/drivers", "dest": "/admin-drivers.html" }
+  ]
+}
