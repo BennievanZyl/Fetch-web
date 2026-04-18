@@ -134,6 +134,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--green);}
 
     <!-- Right: Menu -->
     <div class="right-panel">
+      <div id="store-images-section" style="margin-bottom:0"></div>
       <div id="menu-area">
         <div class="panel">
           <div class="empty-state"><div class="empty-icon">👈</div><p>Select a store to manage its menu</p></div>
@@ -190,6 +191,7 @@ async function loadStores(){
 async function selectStore(store){
   selectedStore=store;
   loadStores();
+  renderStoreImages();
   loadMenu();
 }
 
@@ -294,7 +296,20 @@ function openAddProduct(){
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div><label class="form-label">Prep Time (min)</label><input type="number" id="p-prep" value="15"></div>
-        <div><label class="form-label">Image URL</label><input type="text" id="p-img" placeholder="https://..."></div>
+        <div>
+        <label class="form-label">Product Image</label>
+        <div id="img-preview-wrap" style="margin-bottom:8px;display:none">
+          <img id="img-preview" style="width:120px;height:90px;object-fit:cover;border-radius:10px;border:1px solid #E8E8E8">
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="file" id="p-img-file" accept="image/*" onchange="previewImage(this)" style="display:none">
+          <button type="button" class="btn btn-grey btn-sm" onclick="document.getElementById('p-img-file').click()">📷 Upload Photo</button>
+          <span style="font-size:12px;color:#8E8E8E">or</span>
+          <input type="text" id="p-img" placeholder="paste image URL" style="flex:1;padding:8px 12px;font-size:13px">
+        </div>
+        <div style="font-size:11px;color:#8E8E8E;margin-top:4px">Recommended: 800×600px · JPG or PNG · Max 3MB</div>
+        <div id="upload-progress" style="display:none;font-size:12px;color:#06C167;margin-top:4px">⏳ Uploading...</div>
+      </div>
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Available for order</span>
@@ -325,7 +340,20 @@ function editProduct(p){
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div><label class="form-label">Prep Time (min)</label><input type="number" id="p-prep" value="${p.prep_time_minutes||15}"></div>
-        <div><label class="form-label">Image URL</label><input type="text" id="p-img" value="${p.image_url||''}"></div>
+        <div>
+        <label class="form-label">Product Image</label>
+        <div id="img-preview-wrap" style="margin-bottom:8px;${p.image_url?'':'display:none'}">
+          <img id="img-preview" src="${p.image_url||''}" style="width:120px;height:90px;object-fit:cover;border-radius:10px;border:1px solid #E8E8E8">
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="file" id="p-img-file" accept="image/*" onchange="previewImage(this)" style="display:none">
+          <button type="button" class="btn btn-grey btn-sm" onclick="document.getElementById('p-img-file').click()">📷 Upload Photo</button>
+          <span style="font-size:12px;color:#8E8E8E">or</span>
+          <input type="text" id="p-img" value="${p.image_url||''}" placeholder="paste image URL" style="flex:1;padding:8px 12px;font-size:13px">
+        </div>
+        <div style="font-size:11px;color:#8E8E8E;margin-top:4px">Recommended: 800×600px · JPG or PNG · Max 3MB</div>
+        <div id="upload-progress" style="display:none;font-size:12px;color:#06C167;margin-top:4px">⏳ Uploading...</div>
+      </div>
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Available for order</span>
@@ -500,6 +528,128 @@ async function deleteGroup(groupId){
 }
 
 loadStores();
+
+function previewImage(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const wrap = document.getElementById('img-preview-wrap');
+    const img = document.getElementById('img-preview');
+    if (wrap && img) {
+      img.src = e.target.result;
+      wrap.style.display = 'block';
+    }
+  };
+  reader.readAsDataURL(file);
+  uploadProductImage(file);
+}
+
+async function uploadProductImage(file) {
+  if (!selectedStore) return;
+  const progress = document.getElementById('upload-progress');
+  if (progress) progress.style.display = 'block';
+  
+  try {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const filename = selectedStore.id + '/' + Date.now() + '.' + ext;
+    
+    const res = await fetch(
+      SB + '/storage/v1/object/product-images/' + filename,
+      {
+        method: 'POST',
+        headers: {
+          'apikey': KEY,
+          'Authorization': 'Bearer ' + (tok() || KEY),
+          'Content-Type': file.type,
+          'x-upsert': 'true'
+        },
+        body: file
+      }
+    );
+    
+    if (res.ok) {
+      const publicUrl = SB + '/storage/v1/object/public/product-images/' + filename;
+      const imgInput = document.getElementById('p-img');
+      if (imgInput) imgInput.value = publicUrl;
+      toast('Image uploaded successfully!');
+    } else {
+      const err = await res.json();
+      alert('Upload failed: ' + (err.message || 'Unknown error'));
+    }
+  } catch(e) {
+    alert('Upload error: ' + e.message);
+  } finally {
+    if (progress) progress.style.display = 'none';
+  }
+}
+
+async function uploadStoreImage(file, type) {
+  const bucket = type === 'banner' ? 'store-banners' : 'store-logos';
+  const field = type === 'banner' ? 'banner_url' : 'logo_url';
+  
+  try {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const filename = selectedStore.id + '/' + type + '_' + Date.now() + '.' + ext;
+    
+    const res = await fetch(
+      SB + '/storage/v1/object/' + bucket + '/' + filename,
+      {
+        method: 'POST',
+        headers: {
+          'apikey': KEY,
+          'Authorization': 'Bearer ' + (tok() || KEY),
+          'Content-Type': file.type,
+          'x-upsert': 'true'
+        },
+        body: file
+      }
+    );
+    
+    if (res.ok) {
+      const publicUrl = SB + '/storage/v1/object/public/' + bucket + '/' + filename;
+      await patch('stores', selectedStore.id, { [field]: publicUrl });
+      selectedStore[field] = publicUrl;
+      toast(type === 'banner' ? 'Banner uploaded!' : 'Logo uploaded!');
+      renderStoreImages();
+    } else {
+      const err = await res.json();
+      alert('Upload failed: ' + (err.message || 'Unknown error'));
+    }
+  } catch(e) {
+    alert('Upload error: ' + e.message);
+  }
+}
+
+function renderStoreImages() {
+  const el = document.getElementById('store-images-section');
+  if (!el || !selectedStore) return;
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="panel" style="padding:16px">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#8E8E8E;margin-bottom:10px">Store Banner (16:9)</div>
+        ${selectedStore.banner_url 
+          ? '<img src="'+selectedStore.banner_url+'" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px">'
+          : '<div style="width:100%;height:100px;background:#F7F7F7;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8E8E8E;font-size:12px;margin-bottom:8px;border:2px dashed #E8E8E8">No banner yet</div>'
+        }
+        <input type="file" id="banner-file" accept="image/*" onchange="uploadStoreImage(this.files[0],'banner')" style="display:none">
+        <button class="btn btn-grey btn-sm" onclick="document.getElementById('banner-file').click()" style="width:100%">📷 Upload Banner</button>
+        <div style="font-size:10px;color:#8E8E8E;margin-top:4px;text-align:center">Recommended: 1200×675px</div>
+      </div>
+      <div class="panel" style="padding:16px">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#8E8E8E;margin-bottom:10px">Store Logo (1:1)</div>
+        ${selectedStore.logo_url
+          ? '<img src="'+selectedStore.logo_url+'" style="width:80px;height:80px;object-fit:cover;border-radius:50%;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto">'
+          : '<div style="width:80px;height:80px;background:#F7F7F7;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#8E8E8E;font-size:24px;margin:0 auto 8px;border:2px dashed #E8E8E8">🏪</div>'
+        }
+        <input type="file" id="logo-file" accept="image/*" onchange="uploadStoreImage(this.files[0],'logo')" style="display:none">
+        <button class="btn btn-grey btn-sm" onclick="document.getElementById('logo-file').click()" style="width:100%">📷 Upload Logo</button>
+        <div style="font-size:10px;color:#8E8E8E;margin-top:4px;text-align:center">Recommended: 400×400px</div>
+      </div>
+    </div>
+  `;
+}
+
 </script>
 </body>
 </html>
