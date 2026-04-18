@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fetch Admin — Dashboard</title>
-<link rel="stylesheet" href="admin-shared.css">
+<link rel="stylesheet" href="/admin-shared.css">
 </head>
 <body>
 <div id="sidebar-wrap"></div>
@@ -13,7 +13,7 @@
     <h1>Dashboard</h1>
     <div class="topbar-right">
       <span id="today-date" style="font-size:13px;color:#8E8E8E"></span>
-      <a href="admin-enquiries.html" class="btn btn-green">+ New Enquiry</a>
+      <a href="/admin/enquiries" class="btn btn-green">+ New Enquiry</a>
     </div>
   </div>
   <div class="content">
@@ -44,7 +44,7 @@
       <div class="table-card">
         <div class="table-header">
           <div class="table-title">Recent Enquiries</div>
-          <a href="admin-enquiries.html" class="btn btn-grey btn-sm">View All →</a>
+          <a href="/admin/enquiries" class="btn btn-grey btn-sm">View All →</a>
         </div>
         <table>
           <thead><tr><th>Business</th><th>Suburb</th><th>Status</th><th>Applied</th></tr></thead>
@@ -56,7 +56,7 @@
       <div class="table-card">
         <div class="table-header">
           <div class="table-title">Recent Orders</div>
-          <a href="admin-orders.html" class="btn btn-grey btn-sm">View All →</a>
+          <a href="/admin/orders" class="btn btn-grey btn-sm">View All →</a>
         </div>
         <table>
           <thead><tr><th>Ref</th><th>Store</th><th>Total</th><th>Status</th></tr></thead>
@@ -68,14 +68,14 @@
     </div>
 
     <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap">
-      <a href="admin-enquiries.html" class="btn btn-green" style="padding:12px 24px;font-size:15px">📋 Review Enquiries</a>
-      <a href="admin-codes.html" class="btn btn-black" style="padding:12px 24px;font-size:15px">🎟️ Generate Invite Code</a>
-      <a href="admin-stores.html" class="btn btn-grey" style="padding:12px 24px;font-size:15px">🏪 Manage Stores</a>
+      <a href="/admin/enquiries" class="btn btn-green" style="padding:12px 24px;font-size:15px">📋 Review Enquiries</a>
+      <a href="/admin/codes" class="btn btn-black" style="padding:12px 24px;font-size:15px">🎟️ Generate Invite Code</a>
+      <a href="/admin/stores" class="btn btn-grey" style="padding:12px 24px;font-size:15px">🏪 Manage Stores</a>
     </div>
   </div>
 </div>
 
-<script src="admin-shared.js"></script>
+<script src="/admin-shared.js"></script>
 <script>
   guardAdmin();
   document.getElementById('sidebar-wrap').innerHTML = buildSidebar('dashboard');
