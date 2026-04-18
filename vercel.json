@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/", "destination": "/index.html" },
     { "source": "/partners", "destination": "/partners.html" },
     { "source": "/admin", "destination": "/admin-login.html" },
     { "source": "/admin/dashboard", "destination": "/admin-dashboard.html" },
@@ -7,6 +8,7 @@
     { "source": "/admin/stores", "destination": "/admin-stores.html" },
     { "source": "/admin/codes", "destination": "/admin-codes.html" },
     { "source": "/admin/orders", "destination": "/admin-orders.html" },
-    { "source": "/admin/drivers", "destination": "/admin-drivers.html" }
+    { "source": "/admin/drivers", "destination": "/admin-drivers.html" },
+    { "source": "/admin/menu", "destination": "/admin-menu.html" }
   ]
 }
