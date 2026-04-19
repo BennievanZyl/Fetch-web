@@ -350,6 +350,7 @@ function buildSidebar(active){
     {id:'codes',icon:'🎟️',label:'Invite Codes',href:'/admin/codes'},
     {id:'orders',icon:'🛒',label:'Orders',href:'/admin/orders'},
     {id:'drivers',icon:'🚗',label:'Drivers',href:'/admin/drivers'},
+    {id:'devices',icon:'📱',label:'Linked Devices',href:'/admin/devices'},
     {id:'menu',icon:'🍽️',label:'Menu Builder',href:'/admin/menu'},
   ];
   const items=pages.map(p=>`<a href="${p.href}" class="sidebar-item ${p.id===active?'active':''}""><span>${p.icon}</span><span>${p.label}</span></a>`).join('');
