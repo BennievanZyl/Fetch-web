@@ -22,7 +22,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--blac
 .main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
 .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
 .topbar h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:900;}
-.content{padding:32px;display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start;}
+.content{padding:32px;display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:start;}
 .panel{background:var(--white);border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden;}
 .panel-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .panel-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;}
@@ -34,65 +34,77 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--blac
 .store-sub{font-size:12px;color:var(--muted);margin-top:2px;}
 .btn{padding:8px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;text-decoration:none;}
 .btn-sm{padding:6px 12px;font-size:12px;border-radius:7px;}
-.btn-xs{padding:4px 10px;font-size:11px;border-radius:6px;}
+.btn-xs{padding:4px 8px;font-size:11px;border-radius:6px;}
 .btn-green{background:var(--green);color:var(--white);}
 .btn-black{background:var(--black);color:var(--white);}
 .btn-red{background:rgba(231,76,60,0.1);color:var(--danger);border:1px solid rgba(231,76,60,0.2);}
 .btn-grey{background:var(--surface);color:var(--black);border:1px solid var(--border);}
+.btn-orange{background:rgba(243,156,18,0.1);color:#9A6500;border:1px solid rgba(243,156,18,0.3);}
 .right-panel{display:flex;flex-direction:column;gap:16px;}
-.category-header{background:var(--white);border-radius:16px;padding:16px 20px;box-shadow:0 1px 4px rgba(0,0,0,0.06);display:flex;align-items:center;gap:12px;}
-.cat-select{flex:1;padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--black);background:var(--white);outline:none;}
-.cat-select:focus{border-color:var(--green);}
 .product-card{background:var(--white);border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden;margin-bottom:12px;}
-.product-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;cursor:pointer;}
+.product-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;cursor:pointer;user-select:none;}
+.product-header:hover{background:#fafafa;}
 .product-name{font-weight:700;font-size:15px;}
 .product-meta{font-size:12px;color:var(--muted);margin-top:3px;}
 .product-price{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;color:var(--green);white-space:nowrap;}
-.product-body{padding:16px 20px;}
+.product-body{padding:16px 20px;border-top:1px solid var(--border);}
 .product-body.hidden{display:none;}
-.section-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;}
-.option-group-card{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid var(--border);}
-.option-group-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.section-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;margin-top:16px;}
+.section-label:first-child{margin-top:0;}
+.option-group-card{border-radius:12px;padding:14px;margin-bottom:10px;border:1.5px solid var(--border);background:var(--white);}
+.option-group-card.required-group{border-color:rgba(231,76,60,0.3);background:rgba(231,76,60,0.02);}
+.option-group-card.optional-group{border-color:var(--border);}
+.option-group-card.remove-group{border-color:rgba(243,156,18,0.3);background:rgba(243,156,18,0.02);}
+.option-group-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:8px;}
 .option-group-name{font-weight:700;font-size:14px;}
 .option-group-meta{font-size:11px;color:var(--muted);margin-top:2px;}
-.option-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
+.option-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #F7F7F7;}
 .option-row:last-child{border-bottom:none;}
-.option-name{flex:1;font-size:13px;}
-.option-price{font-size:13px;color:var(--green);font-weight:600;white-space:nowrap;}
-.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;}
+.option-icon{font-size:12px;width:18px;text-align:center;flex-shrink:0;}
+.option-name-text{flex:1;font-size:13px;}
+.option-price-text{font-size:12px;font-weight:600;white-space:nowrap;}
+.option-price-free{color:var(--muted);}
+.option-price-paid{color:var(--green);}
+.option-price-remove{color:var(--warning);}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;margin-left:4px;}
 .badge-required{background:rgba(231,76,60,0.1);color:var(--danger);}
 .badge-optional{background:var(--surface);color:var(--muted);border:1px solid var(--border);}
 .badge-single{background:rgba(6,193,103,0.1);color:#0a7a45;}
 .badge-multi{background:rgba(26,95,165,0.1);color:#1a5fa5;}
-input[type=text],input[type=number],textarea,select{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--black);background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;outline:none;width:100%;transition:border-color 0.2s;}
+.badge-remove{background:rgba(243,156,18,0.1);color:#9A6500;}
+input[type=text],input[type=number],textarea,select{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--black);background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;outline:none;transition:border-color 0.2s;}
 input:focus,textarea:focus,select:focus{border-color:var(--green);}
-.form-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;}
 .form-label{font-size:12px;font-weight:700;color:var(--black);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;}
-.toggle-label{font-size:14px;font-weight:500;}
-.toggle{position:relative;width:44px;height:24px;cursor:pointer;}
+.toggle{position:relative;width:44px;height:24px;cursor:pointer;flex-shrink:0;}
 .toggle input{opacity:0;width:0;height:0;}
 .toggle-slider{position:absolute;inset:0;background:#ddd;border-radius:999px;transition:0.3s;}
 .toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:white;border-radius:50%;transition:0.3s;}
 .toggle input:checked+.toggle-slider{background:var(--green);}
 .toggle input:checked+.toggle-slider:before{transform:translateX(20px);}
-.chip-row{display:flex;gap:6px;flex-wrap:wrap;}
+.chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
 .chip{padding:7px 14px;border-radius:999px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--white);cursor:pointer;color:var(--muted);transition:all 0.2s;}
 .chip.selected{background:var(--black);color:var(--white);border-color:var(--black);}
-.divider{height:1px;background:var(--border);margin:16px 0;}
-.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
-.empty-icon{font-size:36px;margin-bottom:12px;}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;}
+.chip.selected-red{background:var(--danger);color:var(--white);border-color:var(--danger);}
+.chip.selected-blue{background:#1A5FA5;color:var(--white);border-color:#1A5FA5;}
+.chip.selected-orange{background:#9A6500;color:var(--white);border-color:#9A6500;}
+.option-edit-row{display:grid;grid-template-columns:1fr 90px 36px;gap:8px;align-items:center;margin-bottom:8px;}
+.delete-btn{width:36px;height:36px;border-radius:8px;background:rgba(231,76,60,0.1);border:none;color:var(--danger);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;overflow-y:auto;}
 .modal-overlay.open{display:flex;}
-.modal-box{background:#fff;border-radius:20px;padding:36px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;}
+.modal-box{background:#fff;border-radius:20px;padding:36px;max-width:560px;width:100%;position:relative;max-height:90vh;overflow-y:auto;}
 .modal-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:900;margin-bottom:4px;}
 .modal-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
-.option-edit-row{display:grid;grid-template-columns:1fr 100px 36px;gap:8px;align-items:center;margin-bottom:8px;}
-.delete-btn{width:36px;height:36px;border-radius:8px;background:rgba(231,76,60,0.1);border:none;color:var(--danger);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-.avail-toggle{width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
-.success-toast{position:fixed;bottom:24px;right:24px;background:var(--black);color:var(--white);padding:14px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;display:none;align-items:center;gap:8px;}
-.success-toast.show{display:flex;}
-@media(max-width:900px){.sidebar{display:none;}.main{margin-left:0;}.content{grid-template-columns:1fr;}.topbar{padding:16px;}.content{padding:16px;}}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--black);color:var(--white);padding:14px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;display:none;align-items:center;gap:8px;}
+.toast.show{display:flex;}
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+.store-images{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.img-box{border-radius:12px;padding:14px;border:1.5px dashed var(--border);text-align:center;}
+.img-preview{width:100%;height:80px;object-fit:cover;border-radius:8px;margin-bottom:8px;}
+.logo-preview{width:64px;height:64px;object-fit:cover;border-radius:50%;margin:0 auto 8px;display:block;}
+.cat-header{font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;padding:8px 0 4px;border-bottom:2px solid var(--border);margin-bottom:12px;}
+@media(max-width:1100px){.content{grid-template-columns:1fr;}}
+@media(max-width:900px){.sidebar{display:none;}.main{margin-left:0;}.content{padding:16px;}}
 </style>
 </head>
 <body>
@@ -106,7 +118,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--green);}
     <a href="/admin/stores" class="sidebar-item"><span>🏪</span><span>Stores</span></a>
     <a href="/admin/codes" class="sidebar-item"><span>🎟️</span><span>Invite Codes</span></a>
     <a href="/admin/orders" class="sidebar-item"><span>🛒</span><span>Orders</span></a>
-    <a href="/admin/drivers" class="sidebar-item"><span>🚗</span><span>Drivers</span></a>
+    <a href="/admin/drivers" class="sidebar-item"><span>🚗</span><span>Drivers & Devices</span></a>
     <a href="/admin/menu" class="sidebar-item active"><span>🍽️</span><span>Menu Builder</span></a>
   </nav>
   <button class="sidebar-signout" onclick="signOut()">Sign Out</button>
@@ -122,50 +134,38 @@ input:focus,textarea:focus,select:focus{border-color:var(--green);}
   </div>
 
   <div class="content">
-    <!-- Left: Store selector -->
     <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Stores</div>
-      </div>
-      <div id="stores-list">
-        <div class="empty-state"><div class="empty-icon">🏪</div><p>Loading stores...</p></div>
-      </div>
+      <div class="panel-header"><div class="panel-title">Stores</div></div>
+      <div id="stores-list"><div class="empty-state"><p>Loading stores...</p></div></div>
     </div>
 
-    <!-- Right: Menu -->
     <div class="right-panel">
-      <div id="store-images-section" style="margin-bottom:0"></div>
+      <div id="store-images-section"></div>
       <div id="menu-area">
-        <div class="panel">
-          <div class="empty-state"><div class="empty-icon">👈</div><p>Select a store to manage its menu</p></div>
-        </div>
+        <div class="panel"><div class="empty-state"><div style="font-size:32px;margin-bottom:12px">👈</div><p>Select a store to manage its menu</p></div></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal -->
 <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
   <div class="modal-box" id="modal-box"></div>
 </div>
 
-<div class="success-toast" id="toast">✓ <span id="toast-msg">Saved</span></div>
+<div class="toast" id="toast">✓ <span id="toast-msg">Saved</span></div>
 
 <script>
-const SB = 'https://errbnpeswpjmdsvehduz.supabase.co';
-const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycmJucGVzd3BqbWRzdmVoZHV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDgzMDMsImV4cCI6MjA4NjgyNDMwM30.ZYeZUV6PFs_yATPMUisH9vzXwWaMpBUwEn6Dsy6F0z8';
-
+const SB='https://errbnpeswpjmdsvehduz.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycmJucGVzd3BqbWRzdmVoZHV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDgzMDMsImV4cCI6MjA4NjgyNDMwM30.ZYeZUV6PFs_yATPMUisH9vzXwWaMpBUwEn6Dsy6F0z8';
 function tok(){return localStorage.getItem('fetch_admin_token');}
 function signOut(){localStorage.removeItem('fetch_admin_token');window.location.href='/admin';}
 if(!tok())window.location.href='/admin';
-
-function hdrs(extra){return{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+(tok()||KEY),...(extra||{})};}
-
-async function get(table,q){const r=await fetch(SB+'/rest/v1/'+table+(q||''),{headers:hdrs()});return r.json();}
-async function post(table,body){const r=await fetch(SB+'/rest/v1/'+table,{method:'POST',headers:hdrs({'Prefer':'return=representation'}),body:JSON.stringify(body)});return r.json();}
-async function patch(table,id,body){const r=await fetch(SB+'/rest/v1/'+table+'?id=eq.'+id,{method:'PATCH',headers:hdrs({'Prefer':'return=representation'}),body:JSON.stringify(body)});return r.json();}
-async function del(table,id){await fetch(SB+'/rest/v1/'+table+'?id=eq.'+id,{method:'DELETE',headers:hdrs()});}
-
+function hdrs(x){return{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+(tok()||KEY),...(x||{})};}
+async function get(t,q){const r=await fetch(SB+'/rest/v1/'+t+(q||''),{headers:hdrs()});return r.json();}
+async function post(t,b){const r=await fetch(SB+'/rest/v1/'+t,{method:'POST',headers:hdrs({'Prefer':'return=representation'}),body:JSON.stringify(b)});return r.json();}
+async function patch(t,id,b){const r=await fetch(SB+'/rest/v1/'+t+'?id=eq.'+id,{method:'PATCH',headers:hdrs({'Prefer':'return=representation'}),body:JSON.stringify(b)});return r.json();}
+async function del(t,id){await fetch(SB+'/rest/v1/'+t+'?id=eq.'+id,{method:'DELETE',headers:hdrs()});}
+async function delWhere(t,col,val){await fetch(SB+'/rest/v1/'+t+'?'+col+'=eq.'+val,{method:'DELETE',headers:hdrs()});}
 function toast(msg){const t=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 function showModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal').classList.add('open');}
 function closeModal(){document.getElementById('modal').classList.remove('open');}
@@ -173,18 +173,18 @@ function fmtZAR(n){return'R'+parseFloat(n||0).toFixed(2);}
 function fmtDate(d){return d?new Date(d).toLocaleDateString('en-ZA',{day:'numeric',month:'short'}):'—';}
 
 let selectedStore=null;
+let optionRows=[];
+let editingGroupId=null;
+let editingGroupProductId=null;
 
 async function loadStores(){
   const stores=await get('stores','?order=name&select=*');
   const el=document.getElementById('stores-list');
-  if(!Array.isArray(stores)||!stores.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🏪</div><p>No stores found</p></div>';return;}
+  if(!Array.isArray(stores)||!stores.length){el.innerHTML='<div class="empty-state"><p>No stores found</p></div>';return;}
   el.innerHTML=stores.map(s=>`
-    <div class="store-item ${selectedStore?.id===s.id?'selected':''}" onclick="selectStore(${JSON.stringify(s).replace(/"/g,'&quot;')})">
-      <div>
-        <div class="store-name">${s.name}</div>
-        <div class="store-sub">${s.address||'No address'}</div>
-      </div>
-      <span style="font-size:11px;font-weight:700;color:${s.status==='active'?'#0a7a45':'#8E8E8E'}">${s.status}</span>
+    <div class="store-item ${selectedStore?.id===s.id?'selected':''}" onclick='selectStore(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
+      <div><div class="store-name">${s.name}</div><div class="store-sub">${s.address||'No address'}</div></div>
+      <span style="font-size:11px;font-weight:700;color:${s.status==='active'?'#0a7a45':'#8E8E8E'}">${s.status||'—'}</span>
     </div>`).join('');
 }
 
@@ -195,227 +195,263 @@ async function selectStore(store){
   loadMenu();
 }
 
+function renderStoreImages(){
+  if(!selectedStore)return;
+  const el=document.getElementById('store-images-section');
+  el.innerHTML=`
+    <div class="store-images">
+      <div class="img-box">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px">Banner (16:9)</div>
+        ${selectedStore.banner_url?`<img src="${selectedStore.banner_url}" class="img-preview">`:'<div style="width:100%;height:80px;background:#F7F7F7;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8E8E8E;font-size:12px;margin-bottom:8px">No banner</div>'}
+        <input type="file" id="banner-file" accept="image/*" onchange="uploadStoreImg(this.files[0],'banner')" style="display:none">
+        <button class="btn btn-grey btn-sm" onclick="document.getElementById('banner-file').click()" style="width:100%">📷 Upload Banner</button>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px">1200×675px recommended</div>
+      </div>
+      <div class="img-box">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px">Logo (1:1)</div>
+        ${selectedStore.logo_url?`<img src="${selectedStore.logo_url}" class="logo-preview">`:'<div style="width:64px;height:64px;background:#F7F7F7;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#8E8E8E;font-size:20px;margin:0 auto 8px">🏪</div>'}
+        <input type="file" id="logo-file" accept="image/*" onchange="uploadStoreImg(this.files[0],'logo')" style="display:none">
+        <button class="btn btn-grey btn-sm" onclick="document.getElementById('logo-file').click()" style="width:100%">📷 Upload Logo</button>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px">400×400px recommended</div>
+      </div>
+    </div>`;
+}
+
+async function uploadStoreImg(file,type){
+  if(!file||!selectedStore)return;
+  const bucket=type==='banner'?'store-banners':'store-logos';
+  const field=type==='banner'?'banner_url':'logo_url';
+  const filename=selectedStore.id+'/'+type+'_'+Date.now()+'.'+file.name.split('.').pop();
+  toast('Uploading...');
+  const r=await fetch(SB+'/storage/v1/object/'+bucket+'/'+filename,{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+(tok()||KEY),'Content-Type':file.type,'x-upsert':'true'},body:file});
+  if(r.ok){
+    const url=SB+'/storage/v1/object/public/'+bucket+'/'+filename;
+    await patch('stores',selectedStore.id,{[field]:url});
+    selectedStore[field]=url;
+    renderStoreImages();
+    toast(type==='banner'?'Banner uploaded!':'Logo uploaded!');
+  } else {toast('Upload failed');}
+}
+
 async function loadMenu(){
-  if(!selectedStore){return;}
+  if(!selectedStore)return;
   const area=document.getElementById('menu-area');
   area.innerHTML='<div style="text-align:center;padding:40px;color:#8E8E8E">Loading menu...</div>';
-
   const products=await get('products','?store_id=eq.'+selectedStore.id+'&order=category,name&select=*');
-
   if(!Array.isArray(products)||!products.length){
-    area.innerHTML=`
-      <div class="panel">
-        <div class="empty-state">
-          <div class="empty-icon">🍽️</div>
-          <p style="font-weight:700;margin-bottom:8px">No products yet</p>
-          <p style="margin-bottom:16px">Add your first menu item to get started</p>
-          <button class="btn btn-green" onclick="openAddProduct()">+ Add First Product</button>
-        </div>
-      </div>`;
+    area.innerHTML=`<div class="panel"><div class="empty-state"><div style="font-size:36px;margin-bottom:12px">🍽️</div><p style="font-weight:700;margin-bottom:8px">No products yet</p><button class="btn btn-green" onclick="openAddProduct()">+ Add First Product</button></div></div>`;
     return;
   }
-
   const categories=[...new Set(products.map(p=>p.category||'General'))];
   let html='';
-
   for(const cat of categories){
-    const catProducts=products.filter(p=>(p.category||'General')===cat);
-    html+=`<div style="margin-bottom:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#8E8E8E;text-transform:uppercase;letter-spacing:0.8px">${cat} (${catProducts.length})</div>`;
-    for(const p of catProducts){
-      const groups=await get('product_option_groups','?product_id=eq.'+p.id+'&order=sort_order&select=*,options:product_options(*)');
+    const catProds=products.filter(p=>(p.category||'General')===cat);
+    html+=`<div class="cat-header">${cat} <span style="font-weight:400;color:var(--muted)">(${catProds.length})</span></div>`;
+    for(const p of catProds){
+      const groups=await get('product_option_groups','?product_id=eq.'+p.id+'&order=sort_order&select=*,options:product_options(*order=sort_order)');
       html+=buildProductCard(p,Array.isArray(groups)?groups:[]);
     }
   }
   area.innerHTML=html;
 }
 
-function buildProductCard(p,groups){
-  const groupsHtml=groups.length?groups.map(g=>`
-    <div class="option-group-card">
-      <div class="option-group-top">
-        <div>
-          <div class="option-group-name">${g.name}</div>
-          <div class="option-group-meta">
-            <span class="badge ${g.is_required?'badge-required':'badge-optional'}">${g.is_required?'Required':'Optional'}</span>
-            <span class="badge ${g.max_selections===1?'badge-single':'badge-multi'}" style="margin-left:4px">${g.max_selections===1?'Single choice':'Multiple choice'}</span>
-          </div>
-        </div>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-grey btn-xs" onclick="editGroup('${g.id}','${p.id}')">✏️ Edit</button>
-          <button class="btn btn-red btn-xs" onclick="deleteGroup('${g.id}')">Delete</button>
-        </div>
-      </div>
-      ${Array.isArray(g.options)&&g.options.length?g.options.map(o=>`
-        <div class="option-row">
-          <span class="option-name">${o.name}</span>
-          <span class="option-price">${o.price_modifier>0?'+'+fmtZAR(o.price_modifier):'Included'}</span>
-          <span style="font-size:11px;color:${o.is_available?'#0a7a45':'#E74C3C'};margin-left:8px">${o.is_available?'✓':'✗'}</span>
-        </div>`).join(''):'<div style="font-size:13px;color:#8E8E8E;padding:4px 0">No options added yet</div>'}
-    </div>`).join(''):'<div style="font-size:13px;color:#8E8E8E;padding:4px 0">No customisation options</div>';
-
-  return`
-    <div class="product-card">
-      <div class="product-header" onclick="toggleProduct('prod-${p.id}')">
-        <div style="flex:1">
-          <div class="product-name">${p.name} ${p.is_featured?'⭐':''}</div>
-          <div class="product-meta">${p.category||'General'} · ${p.prep_time_minutes||15}min prep · ${p.is_available?'<span style="color:#0a7a45">Available</span>':'<span style="color:#E74C3C">Unavailable</span>'}</div>
-          ${p.description?`<div style="font-size:12px;color:#8E8E8E;margin-top:3px">${p.description.slice(0,80)}${p.description.length>80?'...':''}</div>`:''}
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-          <div class="product-price">${fmtZAR(p.price)}</div>
-          <div style="display:flex;gap:4px">
-            <button class="btn btn-grey btn-xs" onclick="event.stopPropagation();editProduct(${JSON.stringify(p).replace(/"/g,'&quot;')})">✏️</button>
-            <button class="btn btn-red btn-xs" onclick="event.stopPropagation();deleteProduct('${p.id}','${p.name}')">🗑️</button>
-          </div>
-        </div>
-      </div>
-      <div class="product-body hidden" id="prod-${p.id}">
-        <div class="section-label">Customisation Options</div>
-        ${groupsHtml}
-        <button class="btn btn-green btn-sm" style="margin-top:10px" onclick="openAddGroup('${p.id}')">+ Add Option Group</button>
-      </div>
-    </div>`;
+function groupStyle(g){
+  const n=g.name.toLowerCase();
+  if(n.includes('remove')||n.includes('without'))return'remove-group';
+  if(g.is_required)return'required-group';
+  return'optional-group';
 }
 
-function toggleProduct(id){
-  const el=document.getElementById(id);
-  if(el)el.classList.toggle('hidden');
+function groupIcon(g){
+  const n=g.name.toLowerCase();
+  if(n.includes('remove')||n.includes('without'))return'🚫';
+  if(n.includes('zee')||n.includes('spice')||n.includes('flavour'))return'🌶️';
+  if(n.includes('sauce')||n.includes('dip'))return'🥣';
+  if(n.includes('extra')||n.includes('add'))return'➕';
+  if(n.includes('side'))return'🍟';
+  if(n.includes('drink')||n.includes('buddy'))return'🥤';
+  if(n.includes('flavour')||n.includes('shake'))return'🍦';
+  return'⚙️';
+}
+
+function optionIcon(g,o){
+  const n=g.name.toLowerCase();
+  if(n.includes('remove'))return'<span style="color:var(--warning)">✗</span>';
+  if(o.price_modifier>0)return'<span style="color:var(--green)">+</span>';
+  if(g.max_selections===1)return'○';
+  return'☐';
+}
+
+function buildProductCard(p,groups){
+  const groupsHtml=groups.length?groups.map(g=>`
+    <div class="option-group-card ${groupStyle(g)}">
+      <div class="option-group-top">
+        <div style="flex:1">
+          <div class="option-group-name">${groupIcon(g)} ${g.name}
+            <span class="badge ${g.is_required?'badge-required':'badge-optional'}">${g.is_required?'Required':'Optional'}</span>
+            <span class="badge ${g.max_selections===1?'badge-single':'badge-multi'}">${g.max_selections===1?'Single':'Multiple'}</span>
+            ${g.name.toLowerCase().includes('remove')?'<span class="badge badge-remove">Removals</span>':''}
+          </div>
+          ${g.description?`<div class="option-group-meta">${g.description}</div>`:''}
+          <div class="option-group-meta">${Array.isArray(g.options)?g.options.length:0} options</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="btn btn-grey btn-xs" onclick="editGroup('${g.id}','${p.id}')">✏️ Edit</button>
+          <button class="btn btn-red btn-xs" onclick="deleteGroup('${g.id}','${g.name}')">🗑️</button>
+        </div>
+      </div>
+      ${Array.isArray(g.options)&&g.options.length?`
+        <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+          ${g.options.map(o=>`
+            <div class="option-row">
+              <span class="option-icon">${optionIcon(g,o)}</span>
+              <span class="option-name-text">${o.name}</span>
+              <span class="option-price-text ${o.price_modifier>0?'option-price-paid':g.name.toLowerCase().includes('remove')?'option-price-remove':'option-price-free'}">
+                ${o.price_modifier>0?'+'+fmtZAR(o.price_modifier):g.name.toLowerCase().includes('remove')?'Remove':'Included'}
+              </span>
+              <span style="font-size:10px;margin-left:6px;color:${o.is_available?'#0a7a45':'#E74C3C'}">${o.is_available?'✓':'✗'}</span>
+            </div>`).join('')}
+        </div>`:'<div style="font-size:12px;color:var(--muted);padding-top:4px">No options added yet</div>'}
+    </div>`).join('')
+    :'<div style="font-size:13px;color:var(--muted);padding:4px 0">No customisation options — <a href="#" onclick="openAddGroup(\''+p.id+'\');return false" style="color:var(--green)">Add one</a></div>';
+
+  return`<div class="product-card">
+    <div class="product-header" onclick="toggleBody('pb-${p.id}')">
+      <div style="display:flex;gap:12px;align-items:flex-start;flex:1">
+        ${p.image_url?`<img src="${p.image_url}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0">`:'<div style="width:56px;height:56px;background:#F7F7F7;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🍽️</div>'}
+        <div style="flex:1">
+          <div class="product-name">${p.name}${p.is_featured?' ⭐':''}</div>
+          <div class="product-meta">${p.category||'General'} · ${p.prep_time_minutes||15}min · <span style="color:${p.is_available?'#0a7a45':'#E74C3C'}">${p.is_available?'Available':'Off'}</span> · ${groups.length} option group${groups.length!==1?'s':''}</div>
+          ${p.description?`<div style="font-size:11px;color:#8E8E8E;margin-top:2px">${p.description.slice(0,70)}${p.description.length>70?'...':''}</div>`:''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+        <div class="product-price">${fmtZAR(p.price)}</div>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-grey btn-xs" onclick="event.stopPropagation();editProduct(${JSON.stringify(p).replace(/"/g,'&quot;')})">✏️</button>
+          <button class="btn btn-red btn-xs" onclick="event.stopPropagation();deleteProduct('${p.id}','${p.name}')">🗑️</button>
+        </div>
+      </div>
+    </div>
+    <div class="product-body hidden" id="pb-${p.id}">
+      <div class="section-label">Customisation Options</div>
+      ${groupsHtml}
+      <button class="btn btn-green btn-sm" style="margin-top:8px" onclick="openAddGroup('${p.id}')">+ Add Option Group</button>
+      <div class="section-label" style="margin-top:20px">Product Image</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        ${p.image_url?`<img src="${p.image_url}" style="width:80px;height:60px;object-fit:cover;border-radius:8px">`:'<div style="width:80px;height:60px;background:#F7F7F7;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px">🍽️</div>'}
+        <div>
+          <input type="file" id="pimg-${p.id}" accept="image/*" onchange="uploadProductImg(this.files[0],'${p.id}')" style="display:none">
+          <button class="btn btn-grey btn-sm" onclick="document.getElementById('pimg-${p.id}').click()">📷 Upload Photo</button>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">800×600px · Max 3MB</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleBody(id){const el=document.getElementById(id);if(el)el.classList.toggle('hidden');}
+
+async function uploadProductImg(file,productId){
+  if(!file||!selectedStore)return;
+  const filename=selectedStore.id+'/'+productId+'_'+Date.now()+'.'+file.name.split('.').pop();
+  toast('Uploading image...');
+  const r=await fetch(SB+'/storage/v1/object/product-images/'+filename,{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+(tok()||KEY),'Content-Type':file.type,'x-upsert':'true'},body:file});
+  if(r.ok){
+    const url=SB+'/storage/v1/object/public/product-images/'+filename;
+    await patch('products',productId,{image_url:url});
+    toast('Image uploaded!');
+    loadMenu();
+  } else {toast('Upload failed');}
 }
 
 function openAddProduct(){
   if(!selectedStore){alert('Please select a store first.');return;}
   showModal(`
+    <button onclick="closeModal()" style="position:absolute;top:16px;right:16px;background:#F7F7F7;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
     <div class="modal-title">Add Product</div>
     <div class="modal-sub">Add a new item to ${selectedStore.name}</div>
     <div style="display:flex;flex-direction:column;gap:14px">
-      <div><label class="form-label">Product Name *</label><input type="text" id="p-name" placeholder="e.g. Classic Cheese Burger"></div>
-      <div><label class="form-label">Description</label><textarea id="p-desc" rows="2" placeholder="Brief description..."></textarea></div>
+      <div><label class="form-label">Product Name *</label><input type="text" id="p-name" placeholder="e.g. Classic Cheese Burger" style="width:100%"></div>
+      <div><label class="form-label">Description</label><textarea id="p-desc" rows="2" placeholder="Brief description..." style="width:100%"></textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><label class="form-label">Price (ZAR) *</label><input type="number" id="p-price" placeholder="0.00" step="0.01"></div>
-        <div><label class="form-label">Category</label><input type="text" id="p-cat" placeholder="e.g. Burgers"></div>
+        <div><label class="form-label">Price (ZAR) *</label><input type="number" id="p-price" placeholder="0.00" step="0.01" style="width:100%"></div>
+        <div><label class="form-label">Category</label><input type="text" id="p-cat" placeholder="e.g. Burgers" style="width:100%"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><label class="form-label">Prep Time (min)</label><input type="number" id="p-prep" value="15"></div>
-        <div>
-        <label class="form-label">Product Image</label>
-        <div id="img-preview-wrap" style="margin-bottom:8px;display:none">
-          <img id="img-preview" style="width:120px;height:90px;object-fit:cover;border-radius:10px;border:1px solid #E8E8E8">
-        </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="file" id="p-img-file" accept="image/*" onchange="previewImage(this)" style="display:none">
-          <button type="button" class="btn btn-grey btn-sm" onclick="document.getElementById('p-img-file').click()">📷 Upload Photo</button>
-          <span style="font-size:12px;color:#8E8E8E">or</span>
-          <input type="text" id="p-img" placeholder="paste image URL" style="flex:1;padding:8px 12px;font-size:13px">
-        </div>
-        <div style="font-size:11px;color:#8E8E8E;margin-top:4px">Recommended: 800×600px · JPG or PNG · Max 3MB</div>
-        <div id="upload-progress" style="display:none;font-size:12px;color:#06C167;margin-top:4px">⏳ Uploading...</div>
+        <div><label class="form-label">Prep Time (min)</label><input type="number" id="p-prep" value="15" style="width:100%"></div>
+        <div><label class="form-label">Image URL (optional)</label><input type="text" id="p-img" placeholder="https://..." style="width:100%"></div>
       </div>
-      </div>
-      <div class="toggle-row">
-        <span class="toggle-label">Available for order</span>
+      <div class="toggle-row" style="background:#F7F7F7;border-radius:10px;padding:12px 14px">
+        <span style="font-size:14px;font-weight:500">Available for order</span>
         <label class="toggle"><input type="checkbox" id="p-avail" checked><span class="toggle-slider"></span></label>
       </div>
-      <div class="toggle-row">
-        <span class="toggle-label">Mark as Popular ⭐</span>
+      <div class="toggle-row" style="background:#F7F7F7;border-radius:10px;padding:12px 14px">
+        <span style="font-size:14px;font-weight:500">Mark as Popular ⭐</span>
         <label class="toggle"><input type="checkbox" id="p-feat"><span class="toggle-slider"></span></label>
       </div>
-      <div style="display:flex;gap:10px;margin-top:8px">
+      <div style="display:flex;gap:10px;margin-top:4px">
         <button class="btn btn-grey" style="flex:1" onclick="closeModal()">Cancel</button>
         <button class="btn btn-black" style="flex:2;padding:14px" onclick="saveProduct(null)">Save Product</button>
       </div>
-    </div>
-  `);
+    </div>`);
 }
 
 function editProduct(p){
   showModal(`
+    <button onclick="closeModal()" style="position:absolute;top:16px;right:16px;background:#F7F7F7;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
     <div class="modal-title">Edit Product</div>
     <div class="modal-sub">${p.name}</div>
     <div style="display:flex;flex-direction:column;gap:14px">
-      <div><label class="form-label">Product Name *</label><input type="text" id="p-name" value="${p.name}"></div>
-      <div><label class="form-label">Description</label><textarea id="p-desc" rows="2">${p.description||''}</textarea></div>
+      <div><label class="form-label">Product Name *</label><input type="text" id="p-name" value="${p.name}" style="width:100%"></div>
+      <div><label class="form-label">Description</label><textarea id="p-desc" rows="2" style="width:100%">${p.description||''}</textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><label class="form-label">Price (ZAR) *</label><input type="number" id="p-price" value="${p.price}" step="0.01"></div>
-        <div><label class="form-label">Category</label><input type="text" id="p-cat" value="${p.category||''}"></div>
+        <div><label class="form-label">Price (ZAR) *</label><input type="number" id="p-price" value="${p.price}" step="0.01" style="width:100%"></div>
+        <div><label class="form-label">Category</label><input type="text" id="p-cat" value="${p.category||''}" style="width:100%"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><label class="form-label">Prep Time (min)</label><input type="number" id="p-prep" value="${p.prep_time_minutes||15}"></div>
-        <div>
-        <label class="form-label">Product Image</label>
-        <div id="img-preview-wrap" style="margin-bottom:8px;${p.image_url?'':'display:none'}">
-          <img id="img-preview" src="${p.image_url||''}" style="width:120px;height:90px;object-fit:cover;border-radius:10px;border:1px solid #E8E8E8">
-        </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="file" id="p-img-file" accept="image/*" onchange="previewImage(this)" style="display:none">
-          <button type="button" class="btn btn-grey btn-sm" onclick="document.getElementById('p-img-file').click()">📷 Upload Photo</button>
-          <span style="font-size:12px;color:#8E8E8E">or</span>
-          <input type="text" id="p-img" value="${p.image_url||''}" placeholder="paste image URL" style="flex:1;padding:8px 12px;font-size:13px">
-        </div>
-        <div style="font-size:11px;color:#8E8E8E;margin-top:4px">Recommended: 800×600px · JPG or PNG · Max 3MB</div>
-        <div id="upload-progress" style="display:none;font-size:12px;color:#06C167;margin-top:4px">⏳ Uploading...</div>
+        <div><label class="form-label">Prep Time (min)</label><input type="number" id="p-prep" value="${p.prep_time_minutes||15}" style="width:100%"></div>
+        <div><label class="form-label">Image URL</label><input type="text" id="p-img" value="${p.image_url||''}" style="width:100%"></div>
       </div>
-      </div>
-      <div class="toggle-row">
-        <span class="toggle-label">Available for order</span>
+      <div class="toggle-row" style="background:#F7F7F7;border-radius:10px;padding:12px 14px">
+        <span style="font-size:14px;font-weight:500">Available for order</span>
         <label class="toggle"><input type="checkbox" id="p-avail" ${p.is_available?'checked':''}><span class="toggle-slider"></span></label>
       </div>
-      <div class="toggle-row">
-        <span class="toggle-label">Mark as Popular ⭐</span>
+      <div class="toggle-row" style="background:#F7F7F7;border-radius:10px;padding:12px 14px">
+        <span style="font-size:14px;font-weight:500">Mark as Popular ⭐</span>
         <label class="toggle"><input type="checkbox" id="p-feat" ${p.is_featured?'checked':''}><span class="toggle-slider"></span></label>
       </div>
-      <div style="display:flex;gap:10px;margin-top:8px">
+      <div style="display:flex;gap:10px;margin-top:4px">
         <button class="btn btn-grey" style="flex:1" onclick="closeModal()">Cancel</button>
         <button class="btn btn-black" style="flex:2;padding:14px" onclick="saveProduct('${p.id}')">Update Product</button>
       </div>
-    </div>
-  `);
+    </div>`);
 }
 
 async function saveProduct(existingId){
   const name=document.getElementById('p-name').value.trim();
   const price=parseFloat(document.getElementById('p-price').value)||0;
   if(!name||!price){alert('Please enter a name and price.');return;}
-  const body={
-    store_id:selectedStore.id,
-    name,
-    description:document.getElementById('p-desc').value||null,
-    price,
-    category:document.getElementById('p-cat').value||'General',
-    prep_time_minutes:parseInt(document.getElementById('p-prep').value)||15,
-    image_url:document.getElementById('p-img').value||null,
-    is_available:document.getElementById('p-avail').checked,
-    is_featured:document.getElementById('p-feat').checked,
-  };
-  if(existingId){await patch('products',existingId,body);}
-  else{await post('products',body);}
-  closeModal();
-  toast(existingId?'Product updated!':'Product added!');
-  loadMenu();
+  const body={store_id:selectedStore.id,name,description:document.getElementById('p-desc').value||null,price,category:document.getElementById('p-cat').value||'General',prep_time_minutes:parseInt(document.getElementById('p-prep').value)||15,image_url:document.getElementById('p-img').value||null,is_available:document.getElementById('p-avail').checked,is_featured:document.getElementById('p-feat').checked};
+  if(existingId)await patch('products',existingId,body);
+  else await post('products',body);
+  closeModal();toast(existingId?'Product updated!':'Product added!');loadMenu();
 }
 
 async function deleteProduct(id,name){
-  if(!confirm('Delete "'+name+'"? This cannot be undone.'))return;
-  await del('products',id);
-  toast('Product deleted');
-  loadMenu();
+  if(!confirm('Delete "'+name+'"? This also deletes all its option groups.'))return;
+  await del('products',id);toast('Product deleted');loadMenu();
 }
 
-let editingGroupProductId=null;
-let editingGroupId=null;
-let optionRows=[];
-
 function openAddGroup(productId){
-  editingGroupProductId=productId;
-  editingGroupId=null;
-  optionRows=[{name:'',price:0}];
+  editingGroupId=null;editingGroupProductId=productId;optionRows=[{name:'',price:0}];
   renderGroupModal(null);
 }
 
 async function editGroup(groupId,productId){
-  editingGroupProductId=productId;
-  editingGroupId=groupId;
-  const groups=await get('product_option_groups','?id=eq.'+groupId+'&select=*,options:product_options(*)');
-  const g=Array.isArray(groups)&&groups[0]?groups[0]:null;
+  editingGroupId=groupId;editingGroupProductId=productId;
+  const res=await get('product_option_groups','?id=eq.'+groupId+'&select=*,options:product_options(*)');
+  const g=Array.isArray(res)&&res[0]?res[0]:null;
   if(!g){alert('Group not found');return;}
   optionRows=(g.options||[]).map(o=>({id:o.id,name:o.name,price:o.price_modifier,available:o.is_available}));
   if(!optionRows.length)optionRows=[{name:'',price:0}];
@@ -423,24 +459,41 @@ async function editGroup(groupId,productId){
 }
 
 function renderGroupModal(g){
+  const groupTypes=[
+    {id:'flavour',label:'🌶️ Spice/Flavour',desc:'Zee Flavour, spice level'},
+    {id:'sauce',label:'🥣 Sauce/Dip',desc:'Sauce choice, dipping'},
+    {id:'extra',label:'➕ Add Extras',desc:'Extra cheese, bacon etc'},
+    {id:'remove',label:'🚫 Remove Items',desc:'No lettuce, no onion'},
+    {id:'side',label:'🍟 Side Choice',desc:'Chips, rice, salad'},
+    {id:'drink',label:'🥤 Drink Choice',desc:'Buddy drink, milkshake'},
+    {id:'other',label:'⚙️ Other',desc:'Custom group'},
+  ];
+  const currentType=g?detectGroupType(g.name):'other';
   showModal(`
+    <button onclick="closeModal()" style="position:absolute;top:16px;right:16px;background:#F7F7F7;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
     <div class="modal-title">${g?'Edit':'Add'} Option Group</div>
-    <div class="modal-sub">e.g. "Choose your spice level", "Add extras"</div>
-    <div style="display:flex;flex-direction:column;gap:16px">
-      <div><label class="form-label">Group Name *</label><input type="text" id="g-name" value="${g?g.name:''}" placeholder="e.g. Choose your spice level"></div>
-      <div><label class="form-label">Description (optional)</label><input type="text" id="g-desc" value="${g?g.description||'':''}" placeholder="e.g. How hot would you like it?"></div>
+    <div class="modal-sub">e.g. "Zee Flavour", "Choose your Sauce", "Add Extras", "Remove Ingredients"</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label class="form-label">Group Type (quick fill)</label>
+        <div class="chip-row" id="type-chips">
+          ${groupTypes.map(t=>`<div class="chip ${currentType===t.id?'selected':''}" onclick="setGroupType('${t.id}')" title="${t.desc}">${t.label}</div>`).join('')}
+        </div>
+      </div>
+      <div><label class="form-label">Group Name *</label><input type="text" id="g-name" value="${g?g.name:''}" placeholder="e.g. Choose your Zee Flavour" style="width:100%"></div>
+      <div><label class="form-label">Description (shown to customer)</label><input type="text" id="g-desc" value="${g?g.description||'':''}" placeholder="e.g. How hot would you like it?" style="width:100%"></div>
       <div>
         <label class="form-label">Selection Type</label>
         <div class="chip-row">
-          <div class="chip ${(!g||g.max_selections===1)?'selected':''}" id="chip-single" onclick="setSelType(1)">Single choice</div>
-          <div class="chip ${g&&g.max_selections>1?'selected':''}" id="chip-multi" onclick="setSelType(10)">Multiple choice</div>
+          <div class="chip ${(!g||g.max_selections===1)?'selected':''}" id="chip-single" onclick="setSelType(1)">Single choice (Radio)</div>
+          <div class="chip ${g&&g.max_selections>1?'selected':''}" id="chip-multi" onclick="setSelType(10)">Multiple choice (Checkbox)</div>
         </div>
         <input type="hidden" id="g-maxsel" value="${g?g.max_selections:1}">
       </div>
       <div class="toggle-row" style="background:#F7F7F7;border-radius:10px;padding:12px 14px">
         <div>
-          <div class="toggle-label">Required</div>
-          <div style="font-size:12px;color:#8E8E8E;margin-top:2px">Customer must select before adding to cart</div>
+          <div style="font-size:14px;font-weight:500">Required</div>
+          <div style="font-size:12px;color:var(--muted)">Customer must choose before adding to cart</div>
         </div>
         <label class="toggle"><input type="checkbox" id="g-required" ${g&&g.is_required?'checked':''}><span class="toggle-slider"></span></label>
       </div>
@@ -449,12 +502,45 @@ function renderGroupModal(g){
         <div id="options-list"></div>
         <button class="btn btn-grey btn-sm" style="margin-top:8px" onclick="addOptionRow()">+ Add Option</button>
       </div>
-      <div style="display:flex;gap:10px;margin-top:8px">
+      <div style="display:flex;gap:10px;margin-top:4px">
         <button class="btn btn-grey" style="flex:1" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-black" style="flex:2;padding:14px" onclick="saveGroup()">Save Group</button>
+        <button class="btn btn-black" style="flex:2;padding:14px" onclick="saveGroup()">Save Group & Options</button>
       </div>
-    </div>
-  `);
+    </div>`);
+  renderOptionRows();
+}
+
+function detectGroupType(name){
+  const n=name.toLowerCase();
+  if(n.includes('zee')||n.includes('spice')||n.includes('flavour'))return'flavour';
+  if(n.includes('sauce')||n.includes('dip'))return'sauce';
+  if(n.includes('remove')||n.includes('without'))return'remove';
+  if(n.includes('extra')||n.includes('add'))return'extra';
+  if(n.includes('side'))return'side';
+  if(n.includes('drink')||n.includes('buddy'))return'drink';
+  return'other';
+}
+
+const groupTypeDefaults={
+  flavour:{name:'Choose your Zee Flavour',desc:'Select your spice level',required:true,multi:false,options:['Lemon & Herb|0','Mexican Mild|0','Mexican Medium|0','Mexican Hot|0','Mexican Xtra Hot|0','BBQ|0','Peri-Peri|0']},
+  sauce:{name:'Choose your Sauce',desc:'Pick your favourite sauce',required:true,multi:false,options:['Salsa|0','Guacamole|0','Peri-Mayo|0','Sweet Chilli|0','Sour Cream|0','Mochachos Whip|0','No Sauce|0']},
+  extra:{name:'Add Extras',desc:'Customise your order',required:false,multi:true,options:['Extra Cheese|8','Extra Feta|12','Extra Guacamole|10','Extra Jalapeño|5','Bacon|20','Avo|18','Pineapple Slice|8','Extra Patty|35']},
+  remove:{name:'Remove Ingredients',desc:'Let us know what to leave out',required:false,multi:true,options:['Remove Lettuce|0','Remove Tomato|0','Remove Jalapeño|0','Remove Guacamole|0','Remove Cheese|0','Remove Onion|0','Remove Feta|0']},
+  side:{name:'Choose your Side',desc:'Pick your side dish',required:true,multi:false,options:['Beeg Chips|0','Potato Wedges|0','Mexican Rice|0','Garden Salad|0','Pap & Mexican Sauce|0']},
+  drink:{name:'Choose your Buddy Drink',desc:'Pick your drink',required:true,multi:false,options:['Coke|0','Coke Zero|0','Sprite|0','Fanta Orange|0','Cream Soda|0','Still Water|0']},
+  other:{name:'',desc:'',required:false,multi:false,options:['Option 1|0']},
+};
+
+function setGroupType(type){
+  document.querySelectorAll('#type-chips .chip').forEach(c=>c.classList.remove('selected'));
+  event.target.classList.add('selected');
+  const d=groupTypeDefaults[type];
+  if(!d)return;
+  document.getElementById('g-name').value=d.name;
+  document.getElementById('g-desc').value=d.desc;
+  document.getElementById('g-required').checked=d.required;
+  setSelType(d.multi?10:1);
+  optionRows=d.options.map(o=>{const[name,price]=o.split('|');return{name,price:parseFloat(price)||0};});
   renderOptionRows();
 }
 
@@ -469,10 +555,10 @@ function renderOptionRows(){
   if(!el)return;
   el.innerHTML=optionRows.map((o,i)=>`
     <div class="option-edit-row">
-      <input type="text" value="${o.name}" placeholder="Option name (e.g. Mild)" oninput="optionRows[${i}].name=this.value">
-      <input type="number" value="${o.price}" placeholder="0.00" step="0.01" style="text-align:right" oninput="optionRows[${i}].price=parseFloat(this.value)||0">
+      <input type="text" value="${o.name}" placeholder="Option name (e.g. Mild, Extra Cheese)" oninput="optionRows[${i}].name=this.value" style="width:100%">
+      <input type="number" value="${o.price}" placeholder="0.00" step="0.01" style="text-align:right;width:100%" oninput="optionRows[${i}].price=parseFloat(this.value)||0">
       <button class="delete-btn" onclick="removeOptionRow(${i})">×</button>
-    </div>`).join('');
+    </div>`).join('')+'<div style="font-size:11px;color:var(--muted);margin-top:4px">Price = 0 means included in product price · Use positive number for extra charge (e.g. 8 = +R8.00)</div>';
 }
 
 function addOptionRow(){optionRows.push({name:'',price:0});renderOptionRows();}
@@ -481,175 +567,31 @@ function removeOptionRow(i){if(optionRows.length>1){optionRows.splice(i,1);rende
 async function saveGroup(){
   const name=document.getElementById('g-name').value.trim();
   if(!name){alert('Please enter a group name.');return;}
-  const validOptions=optionRows.filter(o=>o.name.trim());
-  if(!validOptions.length){alert('Please add at least one option.');return;}
-
-  const groupBody={
-    product_id:editingGroupProductId,
-    name,
-    description:document.getElementById('g-desc').value||null,
-    is_required:document.getElementById('g-required').checked,
-    max_selections:parseInt(document.getElementById('g-maxsel').value)||1,
-    min_selections:document.getElementById('g-required').checked?1:0,
-  };
-
-  let groupId=editingGroupId;
-  if(groupId){
-    await patch('product_option_groups',groupId,groupBody);
-    await fetch(SB+'/rest/v1/product_options?group_id=eq.'+groupId,{method:'DELETE',headers:hdrs()});
+  const valid=optionRows.filter(o=>o.name.trim());
+  if(!valid.length){alert('Please add at least one option.');return;}
+  const body={product_id:editingGroupProductId,name,description:document.getElementById('g-desc').value||null,is_required:document.getElementById('g-required').checked,max_selections:parseInt(document.getElementById('g-maxsel').value)||1,min_selections:document.getElementById('g-required').checked?1:0};
+  let gid=editingGroupId;
+  if(gid){
+    await patch('product_option_groups',gid,body);
+    await delWhere('product_options','group_id',gid);
   } else {
-    const res=await post('product_option_groups',groupBody);
-    const newGroup=Array.isArray(res)?res[0]:res;
-    if(!newGroup||!newGroup.id){alert('Failed to create group');return;}
-    groupId=newGroup.id;
+    const res=await post('product_option_groups',body);
+    const ng=Array.isArray(res)?res[0]:res;
+    if(!ng||!ng.id){alert('Failed to create group');return;}
+    gid=ng.id;
   }
-
-  for(let i=0;i<validOptions.length;i++){
-    const o=validOptions[i];
-    await post('product_options',{
-      group_id:groupId,
-      name:o.name.trim(),
-      price_modifier:parseFloat(o.price)||0,
-      is_available:true,
-      sort_order:i,
-    });
+  for(let i=0;i<valid.length;i++){
+    await post('product_options',{group_id:gid,name:valid[i].name.trim(),price_modifier:parseFloat(valid[i].price)||0,is_available:true,sort_order:i});
   }
-
-  closeModal();
-  toast(editingGroupId?'Option group updated!':'Option group added!');
-  loadMenu();
+  closeModal();toast(editingGroupId?'Group updated!':'Group added!');loadMenu();
 }
 
-async function deleteGroup(groupId){
-  if(!confirm('Delete this option group and all its options?'))return;
-  await del('product_option_groups',groupId);
-  toast('Option group deleted');
-  loadMenu();
+async function deleteGroup(id,name){
+  if(!confirm('Delete "'+name+'" and all its options?'))return;
+  await del('product_option_groups',id);toast('Group deleted');loadMenu();
 }
 
 loadStores();
-
-function previewImage(input) {
-  if (!input.files || !input.files[0]) return;
-  const file = input.files[0];
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const wrap = document.getElementById('img-preview-wrap');
-    const img = document.getElementById('img-preview');
-    if (wrap && img) {
-      img.src = e.target.result;
-      wrap.style.display = 'block';
-    }
-  };
-  reader.readAsDataURL(file);
-  uploadProductImage(file);
-}
-
-async function uploadProductImage(file) {
-  if (!selectedStore) return;
-  const progress = document.getElementById('upload-progress');
-  if (progress) progress.style.display = 'block';
-  
-  try {
-    const ext = file.name.split('.').pop() || 'jpg';
-    const filename = selectedStore.id + '/' + Date.now() + '.' + ext;
-    
-    const res = await fetch(
-      SB + '/storage/v1/object/product-images/' + filename,
-      {
-        method: 'POST',
-        headers: {
-          'apikey': KEY,
-          'Authorization': 'Bearer ' + (tok() || KEY),
-          'Content-Type': file.type,
-          'x-upsert': 'true'
-        },
-        body: file
-      }
-    );
-    
-    if (res.ok) {
-      const publicUrl = SB + '/storage/v1/object/public/product-images/' + filename;
-      const imgInput = document.getElementById('p-img');
-      if (imgInput) imgInput.value = publicUrl;
-      toast('Image uploaded successfully!');
-    } else {
-      const err = await res.json();
-      alert('Upload failed: ' + (err.message || 'Unknown error'));
-    }
-  } catch(e) {
-    alert('Upload error: ' + e.message);
-  } finally {
-    if (progress) progress.style.display = 'none';
-  }
-}
-
-async function uploadStoreImage(file, type) {
-  const bucket = type === 'banner' ? 'store-banners' : 'store-logos';
-  const field = type === 'banner' ? 'banner_url' : 'logo_url';
-  
-  try {
-    const ext = file.name.split('.').pop() || 'jpg';
-    const filename = selectedStore.id + '/' + type + '_' + Date.now() + '.' + ext;
-    
-    const res = await fetch(
-      SB + '/storage/v1/object/' + bucket + '/' + filename,
-      {
-        method: 'POST',
-        headers: {
-          'apikey': KEY,
-          'Authorization': 'Bearer ' + (tok() || KEY),
-          'Content-Type': file.type,
-          'x-upsert': 'true'
-        },
-        body: file
-      }
-    );
-    
-    if (res.ok) {
-      const publicUrl = SB + '/storage/v1/object/public/' + bucket + '/' + filename;
-      await patch('stores', selectedStore.id, { [field]: publicUrl });
-      selectedStore[field] = publicUrl;
-      toast(type === 'banner' ? 'Banner uploaded!' : 'Logo uploaded!');
-      renderStoreImages();
-    } else {
-      const err = await res.json();
-      alert('Upload failed: ' + (err.message || 'Unknown error'));
-    }
-  } catch(e) {
-    alert('Upload error: ' + e.message);
-  }
-}
-
-function renderStoreImages() {
-  const el = document.getElementById('store-images-section');
-  if (!el || !selectedStore) return;
-  el.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-      <div class="panel" style="padding:16px">
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#8E8E8E;margin-bottom:10px">Store Banner (16:9)</div>
-        ${selectedStore.banner_url 
-          ? '<img src="'+selectedStore.banner_url+'" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px">'
-          : '<div style="width:100%;height:100px;background:#F7F7F7;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8E8E8E;font-size:12px;margin-bottom:8px;border:2px dashed #E8E8E8">No banner yet</div>'
-        }
-        <input type="file" id="banner-file" accept="image/*" onchange="uploadStoreImage(this.files[0],'banner')" style="display:none">
-        <button class="btn btn-grey btn-sm" onclick="document.getElementById('banner-file').click()" style="width:100%">📷 Upload Banner</button>
-        <div style="font-size:10px;color:#8E8E8E;margin-top:4px;text-align:center">Recommended: 1200×675px</div>
-      </div>
-      <div class="panel" style="padding:16px">
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#8E8E8E;margin-bottom:10px">Store Logo (1:1)</div>
-        ${selectedStore.logo_url
-          ? '<img src="'+selectedStore.logo_url+'" style="width:80px;height:80px;object-fit:cover;border-radius:50%;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto">'
-          : '<div style="width:80px;height:80px;background:#F7F7F7;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#8E8E8E;font-size:24px;margin:0 auto 8px;border:2px dashed #E8E8E8">🏪</div>'
-        }
-        <input type="file" id="logo-file" accept="image/*" onchange="uploadStoreImage(this.files[0],'logo')" style="display:none">
-        <button class="btn btn-grey btn-sm" onclick="document.getElementById('logo-file').click()" style="width:100%">📷 Upload Logo</button>
-        <div style="font-size:10px;color:#8E8E8E;margin-top:4px;text-align:center">Recommended: 400×400px</div>
-      </div>
-    </div>
-  `;
-}
-
 </script>
 </body>
 </html>
