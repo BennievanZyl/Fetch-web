@@ -236,23 +236,58 @@ async function uploadStoreImg(file,type){
 async function loadMenu(){
   if(!selectedStore)return;
   const area=document.getElementById('menu-area');
-  area.innerHTML='<div style="text-align:center;padding:40px;color:#8E8E8E">Loading menu...</div>';
-  const products=await get('products','?store_id=eq.'+selectedStore.id+'&order=category,name&select=*');
-  if(!Array.isArray(products)||!products.length){
-    area.innerHTML=`<div class="panel"><div class="empty-state"><div style="font-size:36px;margin-bottom:12px">🍽️</div><p style="font-weight:700;margin-bottom:8px">No products yet</p><button class="btn btn-green" onclick="openAddProduct()">+ Add First Product</button></div></div>`;
-    return;
-  }
-  const categories=[...new Set(products.map(p=>p.category||'General'))];
-  let html='';
-  for(const cat of categories){
-    const catProds=products.filter(p=>(p.category||'General')===cat);
-    html+=`<div class="cat-header">${cat} <span style="font-weight:400;color:var(--muted)">(${catProds.length})</span></div>`;
-    for(const p of catProds){
-      const groups=await get('product_option_groups','?product_id=eq.'+p.id+'&order=sort_order&select=*,options:product_options(*order=sort_order)');
-      html+=buildProductCard(p,Array.isArray(groups)?groups:[]);
+  area.innerHTML='<div style="text-align:center;padding:40px;color:#8E8E8E">⏳ Loading menu...</div>';
+
+  try {
+    // Step 1: Load all products for this store
+    const products = await get('products','?store_id=eq.'+selectedStore.id+'&order=category,name&select=*');
+    
+    if(!Array.isArray(products)||!products.length){
+      area.innerHTML='<div class="panel"><div class="empty-state"><div style="font-size:36px;margin-bottom:12px">🍽️</div><p style="font-weight:700;margin-bottom:8px">No products yet</p><button class="btn btn-green" onclick="openAddProduct()">+ Add First Product</button></div></div>';
+      return;
     }
+
+    // Step 2: Load ALL option groups for ALL products in one call
+    const productIds = products.map(p=>p.id);
+    const idList = productIds.join(',');
+    
+    const [allGroupsRaw, allOptionsRaw] = await Promise.all([
+      get('product_option_groups', '?product_id=in.('+idList+')&order=sort_order&select=*'),
+      get('product_options', '?is_available=eq.true&order=sort_order&select=*')
+    ]);
+
+    const allGroups = Array.isArray(allGroupsRaw) ? allGroupsRaw : [];
+    const allOptions = Array.isArray(allOptionsRaw) ? allOptionsRaw : [];
+
+    // Step 3: Attach options to groups
+    const groupsWithOptions = allGroups.map(g=>({
+      ...g,
+      options: allOptions.filter(o=>o.group_id===g.id)
+    }));
+
+    // Step 4: Build product→groups lookup map
+    const groupsByProduct = {};
+    groupsWithOptions.forEach(g=>{
+      if(!groupsByProduct[g.product_id]) groupsByProduct[g.product_id]=[];
+      groupsByProduct[g.product_id].push(g);
+    });
+
+    // Step 5: Render all products
+    const categories=[...new Set(products.map(p=>p.category||'General'))];
+    let html='';
+    for(const cat of categories){
+      const catProds=products.filter(p=>(p.category||'General')===cat);
+      html+='<div class="cat-header">'+cat+' <span style="font-weight:400;color:var(--muted)">('+catProds.length+')</span></div>';
+      for(const p of catProds){
+        html+=buildProductCard(p, groupsByProduct[p.id]||[]);
+      }
+    }
+    area.innerHTML=html;
+
+  } catch(err){
+    console.error('loadMenu error:', err);
+    area.innerHTML='<div style="text-align:center;padding:40px;color:#E74C3C">Error loading menu: '+err.message+'</div>';
   }
-  area.innerHTML=html;
 }
 
 function groupStyle(g){
@@ -569,31 +604,88 @@ async function saveGroup(){
   if(!name){alert('Please enter a group name.');return;}
   const valid=optionRows.filter(o=>o.name.trim());
   if(!valid.length){alert('Please add at least one option.');return;}
+  
   const saveBtn=document.querySelector('#modal-box .btn-black');
   if(saveBtn){saveBtn.textContent='Saving...';saveBtn.disabled=true;}
+  
   try{
-    const body={product_id:editingGroupProductId,name,description:document.getElementById('g-desc').value||null,is_required:document.getElementById('g-required').checked,max_selections:parseInt(document.getElementById('g-maxsel').value)||1,min_selections:document.getElementById('g-required').checked?1:0,sort_order:0};
-    let gid=editingGroupId;
+    const isRequired = document.getElementById('g-required').checked;
+    const maxSel = parseInt(document.getElementById('g-maxsel').value)||1;
+    
+    const groupBody = {
+      product_id: editingGroupProductId,
+      name: name,
+      description: document.getElementById('g-desc').value.trim()||null,
+      is_required: isRequired,
+      max_selections: maxSel,
+      min_selections: isRequired ? 1 : 0,
+      sort_order: 0
+    };
+
+    let gid = editingGroupId;
+
     if(gid){
-      const pr=await patch('product_option_groups',gid,body);
-      if(pr&&pr.code){throw new Error(pr.message||pr.code);}
-      await delWhere('product_options','group_id',gid);
+      // UPDATE existing group
+      const patchRes = await fetch(SB+'/rest/v1/product_option_groups?id=eq.'+gid, {
+        method: 'PATCH',
+        headers: hdrs({'Prefer':'return=representation'}),
+        body: JSON.stringify(groupBody)
+      });
+      if(!patchRes.ok){
+        const e = await patchRes.json();
+        throw new Error('Update failed: '+(e.message||e.code||patchRes.status));
+      }
+      // Delete old options
+      await fetch(SB+'/rest/v1/product_options?group_id=eq.'+gid, {
+        method: 'DELETE', headers: hdrs()
+      });
+
     } else {
-      const res=await post('product_option_groups',body);
-      if(!res){throw new Error('No response from server');}
-      if(res.code||res.error){throw new Error(res.message||res.error||res.code);}
-      const ng=Array.isArray(res)?res[0]:res;
-      if(!ng||!ng.id){throw new Error('Group created but no ID returned: '+JSON.stringify(res));}
-      gid=ng.id;
+      // INSERT new group
+      const postRes = await fetch(SB+'/rest/v1/product_option_groups', {
+        method: 'POST',
+        headers: hdrs({'Prefer':'return=representation'}),
+        body: JSON.stringify(groupBody)
+      });
+      const postData = await postRes.json();
+      console.log('Group insert response:', postRes.status, postData);
+      
+      if(!postRes.ok){
+        throw new Error('Insert failed ('+postRes.status+'): '+(postData.message||postData.code||JSON.stringify(postData)));
+      }
+      const newGroup = Array.isArray(postData) ? postData[0] : postData;
+      if(!newGroup || !newGroup.id){
+        throw new Error('No group ID returned. Response: '+JSON.stringify(postData));
+      }
+      gid = newGroup.id;
     }
+
+    // Insert all options
     for(let i=0;i<valid.length;i++){
-      const oRes=await post('product_options',{group_id:gid,name:valid[i].name.trim(),price_modifier:parseFloat(valid[i].price)||0,is_available:true,sort_order:i});
-      if(oRes&&oRes.code){console.warn('Option insert warning:',oRes);}
+      const optRes = await fetch(SB+'/rest/v1/product_options', {
+        method: 'POST',
+        headers: hdrs({'Prefer':'return=representation'}),
+        body: JSON.stringify({
+          group_id: gid,
+          name: valid[i].name.trim(),
+          price_modifier: parseFloat(valid[i].price)||0,
+          is_available: true,
+          sort_order: i
+        })
+      });
+      if(!optRes.ok){
+        const e = await optRes.json();
+        console.warn('Option '+i+' insert warning:', e);
+      }
     }
-    closeModal();toast(editingGroupId?'Group updated! ✓':'Group added! ✓');loadMenu();
+
+    closeModal();
+    toast(editingGroupId ? 'Group updated! ✓' : 'Group added! ✓');
+    loadMenu();
+
   } catch(err){
-    console.error('saveGroup error:',err);
-    alert('Error: '+err.message);
+    console.error('saveGroup error:', err);
+    alert('Save failed: '+err.message);
     if(saveBtn){saveBtn.textContent='Save Group & Options';saveBtn.disabled=false;}
   }
 }
