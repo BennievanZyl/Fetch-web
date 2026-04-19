@@ -69,7 +69,9 @@
       });
       const data = await res.json();
       if (!res.ok) { showError(data.error_description || 'Invalid email or password.'); btn.textContent = 'Sign In →'; btn.disabled = false; return; }
+      // Save both access token AND refresh token
       localStorage.setItem('fetch_admin_token', data.access_token);
+      localStorage.setItem('fetch_admin_refresh_token', data.refresh_token);
       localStorage.setItem('fetch_admin_user', JSON.stringify(data.user));
       window.location.href = '/admin/dashboard';
     } catch(e) { showError('Network error. Please try again.'); btn.textContent = 'Sign In →'; btn.disabled = false; }
