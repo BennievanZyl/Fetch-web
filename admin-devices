@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fetch Admin — Linked Devices</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--green:#06C167;--black:#000;--white:#fff;--surface:#F7F7F7;--border:#E8E8E8;--muted:#8E8E8E;--danger:#E74C3C;--warning:#F39C12;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--black);display:flex;min-height:100vh;}
+.sidebar{width:240px;min-height:100vh;background:var(--black);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;}
+.sidebar-logo{font-family:'Syne',sans-serif;font-weight:900;font-size:22px;letter-spacing:-1px;color:var(--white);padding:28px 24px 4px;}
+.sidebar-logo span{color:var(--green);}
+.sidebar-badge{font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;padding:0 24px 24px;}
+.sidebar-nav{flex:1;display:flex;flex-direction:column;gap:2px;padding:8px 12px;}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;font-size:14px;font-weight:500;color:rgba(255,255,255,0.6);text-decoration:none;transition:all 0.2s;}
+.sidebar-item:hover{background:rgba(255,255,255,0.08);color:var(--white);}
+.sidebar-item.active{background:rgba(6,193,103,0.15);color:var(--green);font-weight:700;}
+.sidebar-signout{margin:16px 12px;padding:12px;border-radius:10px;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);color:var(--danger);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
+.topbar h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:900;}
+.content{padding:32px;display:flex;flex-direction:column;gap:24px;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.stat-card{background:var(--white);border-radius:16px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.stat-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;}
+.stat-num{font-family:'Syne',sans-serif;font-size:32px;font-weight:900;line-height:1;}
+.table-card{background:var(--white);border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.table-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.table-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;}
+.filter-tabs{display:flex;gap:6px;}
+.filter-tab{padding:6px 14px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--muted);transition:all 0.15s;}
+.filter-tab.active{background:var(--black);color:var(--white);border-color:var(--black);}
+table{width:100%;border-collapse:collapse;}
+thead th{background:var(--surface);padding:12px 16px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border);}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#fafafa;}
+tbody td{padding:14px 16px;font-size:14px;vertical-align:middle;}
+.td-muted{color:var(--muted);font-size:13px;}
+.btn{padding:8px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:7px;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-black{background:#000;color:#fff;}
+.btn-red{background:rgba(231,76,60,0.1);color:var(--danger);border:1px solid rgba(231,76,60,0.2);}
+.btn-grey{background:var(--surface);color:#000;border:1px solid var(--border);}
+.btn-blue{background:rgba(26,95,165,0.1);color:#1A5FA5;border:1px solid rgba(26,95,165,0.2);}
+.device-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.device-icon-driver{background:rgba(6,193,103,0.12);}
+.device-icon-viewer{background:rgba(26,95,165,0.12);}
+.device-icon-pending{background:rgba(243,156,18,0.12);}
+/* Modal */
+.modal-wrap{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;}
+.modal-wrap.open{display:flex;}
+.modal-box{background:#fff;border-radius:20px;padding:40px;max-width:520px;width:100%;max-height:92vh;overflow-y:auto;position:relative;}
+.modal-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:900;margin-bottom:4px;}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.role-card{padding:20px;border-radius:14px;border:2px solid var(--border);cursor:pointer;text-align:center;transition:all 0.2s;background:#fff;}
+.role-card:hover{border-color:#ccc;background:#fafafa;}
+.role-card.selected{border-color:#000;background:#F7F7F7;}
+.role-card.selected-green{border-color:var(--green);background:rgba(6,193,103,0.05);}
+.role-card.selected-blue{border-color:#1A5FA5;background:rgba(26,95,165,0.05);}
+.role-icon{font-size:32px;margin-bottom:8px;}
+.role-label{font-size:15px;font-weight:700;color:#000;}
+.role-desc{font-size:12px;color:var(--muted);margin-top:4px;}
+.fl label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;display:block;}
+.fl input,.fl select{width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;margin-bottom:14px;}
+.fl input:focus,.fl select:focus{border-color:var(--green);}
+.code-display{font-family:monospace;font-size:44px;font-weight:900;color:#000;text-align:center;letter-spacing:10px;background:var(--surface);border-radius:14px;padding:24px;margin:16px 0;border:2px dashed var(--border);}
+.qr-wrap{display:flex;justify-content:center;margin:16px 0;}
+.timer{font-size:13px;color:var(--warning);font-weight:700;text-align:center;margin-bottom:8px;}
+.how-to{background:var(--surface);border-radius:10px;padding:14px;font-size:13px;color:var(--muted);margin-bottom:16px;}
+.how-to strong{color:#000;}
+.how-to div{padding:3px 0;}
+.toast{position:fixed;bottom:24px;right:24px;background:#000;color:#fff;padding:14px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;display:none;align-items:center;gap:8px;}
+.toast.show{display:flex;}
+@media(max-width:900px){.sidebar{display:none;}.main{margin-left:0;}.stats-grid{grid-template-columns:1fr 1fr;}.content{padding:16px;}}
+</style>
+</head>
+<body>
+
+<div id="sidebar-wrap"></div>
+
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="/admin/drivers" style="color:var(--muted);text-decoration:none;font-size:14px">← Drivers</a>
+      <h1>Linked Devices</h1>
+    </div>
+    <button class="btn btn-green" onclick="openLinkDevice()">+ Link New Device</button>
+  </div>
+
+  <div class="content">
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label" style="color:var(--green)">Active Drivers</div>
+        <div class="stat-num" id="s-driver" style="color:var(--green)">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" style="color:#1A5FA5">Order Viewers</div>
+        <div class="stat-num" id="s-viewer" style="color:#1A5FA5">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" style="color:var(--warning)">Pending (unused codes)</div>
+        <div class="stat-num" id="s-pending" style="color:var(--warning)">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" style="color:var(--danger)">Revoked</div>
+        <div class="stat-num" id="s-revoked" style="color:var(--danger)">—</div>
+      </div>
+    </div>
+
+    <!-- Filter tabs + table -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">📱 All Linked Devices</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div class="filter-tabs" id="filter-tabs">
+            <div class="filter-tab active" onclick="setFilter('all',this)">All</div>
+            <div class="filter-tab" onclick="setFilter('active',this)">Active</div>
+            <div class="filter-tab" onclick="setFilter('pending',this)">Pending</div>
+            <div class="filter-tab" onclick="setFilter('revoked',this)">Revoked</div>
+          </div>
+          <div class="filter-tabs" id="role-tabs">
+            <div class="filter-tab active" onclick="setRoleFilter('all',this)">All Roles</div>
+            <div class="filter-tab" onclick="setRoleFilter('driver',this)">🚗 Drivers</div>
+            <div class="filter-tab" onclick="setRoleFilter('order_viewer',this)">🖥️ Order Viewers</div>
+          </div>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Device</th>
+            <th>Role</th>
+            <th>Store</th>
+            <th>Code</th>
+            <th>Status</th>
+            <th>Linked</th>
+            <th>Expires</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="devices-tbody">
+          <tr><td colspan="8" style="text-align:center;padding:48px;color:var(--muted)">Loading devices...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Info card -->
+    <div style="background:var(--white);border-radius:16px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:12px">How device linking works</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:6px">🚗 Driver Device</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.6">Links a phone as a driver's delivery device. The device sees available orders in the driver's zones and can accept, collect and deliver orders. Stays linked until revoked.</div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#1A5FA5;margin-bottom:6px">🖥️ Order Viewer</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.6">Links a tablet or screen as a kitchen display. Shows all incoming orders in real time. Ideal for kitchen staff or front-of-house. Stays linked until revoked.</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);font-size:13px;color:var(--muted)">
+        <strong style="color:#000">To link a device:</strong> Generate a code here → open Fetch app on the device → tap FETCH. logo 3 times on login screen → select role → enter code or scan QR.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Link Device Modal — Step 1: Choose Role & Store -->
+<div class="modal-wrap" id="modal-step1">
+  <div class="modal-box">
+    <button onclick="closeAll()" style="position:absolute;top:16px;right:16px;background:var(--surface);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
+    <div class="modal-title">Link New Device</div>
+    <div class="modal-sub">Choose the role for this device</div>
+
+    <div class="role-grid">
+      <div class="role-card" id="rc-driver" onclick="selectRole('driver')">
+        <div class="role-icon">🚗</div>
+        <div class="role-label">Driver</div>
+        <div class="role-desc">Delivery rider phone</div>
+      </div>
+      <div class="role-card" id="rc-viewer" onclick="selectRole('order_viewer')">
+        <div class="role-icon">🖥️</div>
+        <div class="role-label">Order Viewer</div>
+        <div class="role-desc">Kitchen display / tablet</div>
+      </div>
+    </div>
+    <input type="hidden" id="sel-role">
+
+    <div class="fl">
+      <label>Store *</label>
+      <select id="sel-store">
+        <option value="">Select store...</option>
+      </select>
+      <label>Device Label (optional)</label>
+      <input id="sel-label" placeholder="e.g. Ahmed's Phone, Kitchen Tablet">
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-grey" style="flex:1" onclick="closeAll()">Cancel</button>
+      <button class="btn btn-black" style="flex:2;padding:14px" onclick="generateCode()">Generate QR Code →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Link Device Modal — Step 2: Show QR -->
+<div class="modal-wrap" id="modal-step2">
+  <div class="modal-box" style="text-align:center">
+    <button onclick="closeAll()" style="position:absolute;top:16px;right:16px;background:var(--surface);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
+
+    <div id="qr-role-icon" style="font-size:40px;margin-bottom:8px">🚗</div>
+    <div class="modal-title" id="qr-title">Driver Device</div>
+    <div class="modal-sub" id="qr-sub">Scan or enter code on the Fetch app</div>
+
+    <div class="code-display" id="qr-code-text">——</div>
+
+    <div class="qr-wrap">
+      <div id="qr-container" style="padding:16px;background:#fff;border-radius:12px;border:1px solid var(--border);display:inline-block"></div>
+    </div>
+
+    <div class="timer" id="qr-timer">⏱ Expires in 30:00</div>
+
+    <div class="how-to">
+      <div style="font-weight:700;color:#000;margin-bottom:8px">How to link this device:</div>
+      <div>1. Open the <strong>Fetch app</strong> on the device to link</div>
+      <div>2. Tap the <strong>FETCH. logo 3 times</strong> on the login screen</div>
+      <div id="how-step3">3. Tap <strong>"Driver Access"</strong></div>
+      <div>4. Enter code <strong id="how-code">——</strong> or scan the QR above</div>
+      <div>5. Device stays linked until you revoke it here</div>
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-grey" style="flex:1" id="btn-copy" onclick="copyCode()">📋 Copy Code</button>
+      <button class="btn btn-black" style="flex:1" onclick="closeAll();loadAll()">Done ✓</button>
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn btn-grey btn-sm" onclick="showStep1()">← Change Role / Store</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Inline shared dependencies ────────────────────────────────
+const SUPABASE_URL='https://errbnpeswpjmdsvehduz.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycmJucGVzd3BqbWRzdmVoZHV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDgzMDMsImV4cCI6MjA4NjgyNDMwM30.ZYeZUV6PFs_yATPMUisH9vzXwWaMpBUwEn6Dsy6F0z8';
+function getToken(){return localStorage.getItem('fetch_admin_token');}
+function guardAdmin(){if(!getToken()){window.location.href='/admin';return false;}return true;}
+function signOut(){localStorage.removeItem('fetch_admin_token');localStorage.removeItem('fetch_admin_user');window.location.href='/admin';}
+function formatZAR(a){return'R'+parseFloat(a||0).toFixed(2);}
+function formatDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'});}
+function timeAgo(d){const diff=Date.now()-new Date(d).getTime();const m=Math.floor(diff/60000);if(m<1)return'just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';}
+function buildSidebar(active){
+  const pages=[
+    {id:'dashboard',icon:'📊',label:'Dashboard',href:'/admin/dashboard'},
+    {id:'enquiries',icon:'📋',label:'Enquiries',href:'/admin/enquiries'},
+    {id:'stores',icon:'🏪',label:'Stores',href:'/admin/stores'},
+    {id:'codes',icon:'🎟️',label:'Invite Codes',href:'/admin/codes'},
+    {id:'orders',icon:'🛒',label:'Orders',href:'/admin/orders'},
+    {id:'drivers',icon:'🚗',label:'Drivers',href:'/admin/drivers'},
+    {id:'devices',icon:'📱',label:'Linked Devices',href:'/admin/devices'},
+    {id:'menu',icon:'🍽️',label:'Menu Builder',href:'/admin/menu'},
+  ];
+  const items=pages.map(p=>`<a href="${p.href}" class="sidebar-item ${p.id===active?'active':''}">${p.icon} ${p.label}</a>`).join('');
+  return`<aside class="sidebar"><div class="sidebar-logo">FETCH<span>.</span></div><div class="sidebar-badge">Admin</div><nav class="sidebar-nav">${items}</nav><button class="sidebar-signout" onclick="signOut()">Sign Out</button></aside>`;
+}
+</script>
+<script>
+document.getElementById('sidebar-wrap').innerHTML = buildSidebar('devices');
+guardAdmin();
+
+const SB = SUPABASE_URL;
+function hdrs(ex={}){return{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+(getToken()||SUPABASE_KEY),...ex};}
+async function get(t,p=''){const r=await fetch(`${SB}/rest/v1/${t}${p}`,{headers:hdrs()});return r.json();}
+async function post(t,b){const r=await fetch(`${SB}/rest/v1/${t}`,{method:'POST',headers:hdrs({'Prefer':'return=representation'}),body:JSON.stringify(b)});return r.json();}
+async function pat(t,id,b){const r=await fetch(`${SB}/rest/v1/${t}?id=eq.${id}`,{method:'PATCH',headers:hdrs({'Prefer':'return=representation'}),body:JSON.stringify(b)});return r.json();}
+
+function toast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.style.background=err?'#E74C3C':'#000';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function genCode(){return Math.random().toString(36).substring(2,8).toUpperCase();}
+
+let allDevices=[], allStores=[], statusFilter='all', roleFilter='all';
+let timerInterval = null;
+
+async function loadAll(){
+  const [devices, stores] = await Promise.all([
+    get('store_device_links','?order=created_at.desc&select=*,store:stores(name)'),
+    get('stores','?select=id,name&order=name')
+  ]);
+  allDevices = Array.isArray(devices) ? devices.map(d=>({...d, store_name: d.store?.name||'—'})) : [];
+  allStores = Array.isArray(stores) ? stores : [];
+
+  // Stats
+  document.getElementById('s-driver').textContent = allDevices.filter(d=>d.role==='driver'&&d.status==='active').length;
+  document.getElementById('s-viewer').textContent = allDevices.filter(d=>d.role==='order_viewer'&&d.status==='active').length;
+  document.getElementById('s-pending').textContent = allDevices.filter(d=>d.status==='pending').length;
+  document.getElementById('s-revoked').textContent = allDevices.filter(d=>d.status==='revoked').length;
+
+  // Populate store dropdown
+  document.getElementById('sel-store').innerHTML =
+    '<option value="">Select store...</option>' +
+    allStores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+
+  renderTable();
+}
+
+function setFilter(f, btn){
+  statusFilter=f;
+  document.querySelectorAll('#filter-tabs .filter-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+function setRoleFilter(r, btn){
+  roleFilter=r;
+  document.querySelectorAll('#role-tabs .filter-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+function renderTable(){
+  let data = allDevices;
+  if(statusFilter !== 'all') data = data.filter(d=>d.status===statusFilter);
+  if(roleFilter !== 'all') data = data.filter(d=>d.role===roleFilter);
+
+  const tbody = document.getElementById('devices-tbody');
+  if(!data.length){
+    const msg = statusFilter==='revoked' ? 'No revoked devices' :
+                statusFilter==='pending' ? 'No pending codes — generate one above' :
+                'No devices found';
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:32px;margin-bottom:12px">📱</div>${msg}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(d => {
+    const isDriver = d.role === 'driver';
+    const isActive = d.status === 'active';
+    const isPending = d.status === 'pending';
+    const isRevoked = d.status === 'revoked';
+    const isExpired = d.expires_at && new Date(d.expires_at) < new Date() && isPending;
+
+    const statusPill = isActive
+      ? `<span style="background:#E6F9F0;color:#0A7A45;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">● Active</span>`
+      : isPending && !isExpired
+      ? `<span style="background:#FFF8E6;color:#9A6500;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">⏳ Pending</span>`
+      : isExpired
+      ? `<span style="background:#FDECEA;color:#B91C1C;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">⚠️ Expired</span>`
+      : `<span style="background:#F7F7F7;color:#8E8E8E;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">Revoked</span>`;
+
+    const rolePill = isDriver
+      ? `<span style="background:rgba(6,193,103,0.1);color:#0A7A45;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">🚗 Driver</span>`
+      : `<span style="background:rgba(26,95,165,0.1);color:#1A5FA5;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">🖥️ Order Viewer</span>`;
+
+    const iconClass = isDriver ? 'device-icon-driver' : 'device-icon-viewer';
+    const iconEmoji = isDriver ? '🚗' : '🖥️';
+
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="device-icon ${iconClass}">${iconEmoji}</div>
+          <div>
+            <div style="font-weight:700">${d.device_name || d.label || 'Unnamed Device'}</div>
+            <div style="font-size:12px;color:var(--muted)">${d.device_name && d.label && d.device_name!==d.label ? d.label : ''}</div>
+          </div>
+        </div>
+      </td>
+      <td>${rolePill}</td>
+      <td class="td-muted">${d.store_name}</td>
+      <td>
+        <span style="font-family:monospace;font-size:15px;font-weight:700;letter-spacing:3px;background:var(--surface);padding:4px 10px;border-radius:6px">${d.code}</span>
+      </td>
+      <td>${statusPill}</td>
+      <td class="td-muted">${d.linked_at ? timeAgo(d.linked_at) : '—'}</td>
+      <td class="td-muted">${d.expires_at && isPending ? formatDate(d.expires_at) : isActive ? '∞ Never' : '—'}</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${isPending && !isExpired ? `<button class="btn btn-grey btn-sm" onclick="showQRAgain('${d.id}','${d.code}','${d.role}','${d.label||d.device_name||'Device'}')">📱 QR</button>` : ''}
+          ${isPending && !isExpired ? `<button class="btn btn-grey btn-sm" onclick="copyText('${d.code}')">📋 Copy</button>` : ''}
+          ${isActive ? `<button class="btn btn-red btn-sm" onclick="revokeDevice('${d.id}','${d.device_name||d.label||d.code}')">🔌 Revoke</button>` : ''}
+          ${isExpired ? `<button class="btn btn-grey btn-sm" onclick="regenerateCode('${d.id}','${d.role}','${d.store_id}','${d.label||''}')">🔄 Regenerate</button>` : ''}
+          ${isRevoked ? `<span style="font-size:12px;color:var(--muted)">Revoked ${d.linked_at?timeAgo(d.linked_at):''}</span>` : ''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Link Device Flow ──────────────────────────────────────────
+function openLinkDevice(presetRole=''){
+  document.getElementById('sel-role').value = presetRole;
+  document.getElementById('sel-store').value = '';
+  document.getElementById('sel-label').value = '';
+  document.querySelectorAll('.role-card').forEach(c=>{
+    c.classList.remove('selected','selected-green','selected-blue');
+  });
+  if(presetRole==='driver'){
+    document.getElementById('rc-driver').classList.add('selected-green');
+  } else if(presetRole==='order_viewer'){
+    document.getElementById('rc-viewer').classList.add('selected-blue');
+  }
+  document.getElementById('modal-step1').classList.add('open');
+}
+
+function showStep1(){
+  document.getElementById('modal-step2').classList.remove('open');
+  document.getElementById('modal-step1').classList.add('open');
+  if(timerInterval) clearInterval(timerInterval);
+}
+
+function selectRole(role){
+  document.getElementById('sel-role').value = role;
+  document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('selected','selected-green','selected-blue'));
+  if(role==='driver'){
+    document.getElementById('rc-driver').classList.add('selected-green');
+  } else {
+    document.getElementById('rc-viewer').classList.add('selected-blue');
+  }
+}
+
+async function generateCode(){
+  const role = document.getElementById('sel-role').value;
+  const storeId = document.getElementById('sel-store').value;
+  const label = document.getElementById('sel-label').value.trim();
+
+  if(!role){ toast('Please select a role',true); return; }
+  if(!storeId){ toast('Please select a store',true); return; }
+
+  const code = genCode();
+  const expires = new Date(Date.now() + 30*60*1000).toISOString();
+
+  const res = await post('store_device_links',{
+    store_id: storeId,
+    code,
+    role,
+    label: label || (role==='driver' ? 'Driver Device' : 'Order Viewer'),
+    status: 'pending',
+    expires_at: expires
+  });
+
+  const saved = Array.isArray(res) ? res[0] : res;
+  if(!saved?.id){ toast('Failed to generate code. Check store_device_links table exists.',true); return; }
+
+  document.getElementById('modal-step1').classList.remove('open');
+  showQRModal(code, role, label || (role==='driver'?'Driver Device':'Order Viewer'));
+  loadAll();
+}
+
+function showQRModal(code, role, label){
+  const isDriver = role === 'driver';
+  document.getElementById('qr-role-icon').textContent = isDriver ? '🚗' : '🖥️';
+  document.getElementById('qr-title').textContent = isDriver ? 'Driver Device' : 'Order Viewer';
+  document.getElementById('qr-sub').textContent = label + ' · Expires in 30 minutes';
+  document.getElementById('qr-code-text').textContent = code;
+  document.getElementById('how-code').textContent = code;
+  document.getElementById('how-step3').innerHTML = `3. Tap <strong>"${isDriver ? 'Driver Access' : 'Live Orders Screen'}"</strong>`;
+
+  // Clear previous QR
+  const container = document.getElementById('qr-container');
+  container.innerHTML = '';
+  setTimeout(()=>{
+    if(typeof QRCode !== 'undefined'){
+      new QRCode(container,{text:code,width:180,height:180,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+    }
+  },100);
+
+  // Countdown
+  if(timerInterval) clearInterval(timerInterval);
+  let secs = 30*60;
+  timerInterval = setInterval(()=>{
+    secs--;
+    const el = document.getElementById('qr-timer');
+    if(!el){ clearInterval(timerInterval); return; }
+    const m = Math.floor(secs/60);
+    const s = secs%60;
+    el.textContent = `⏱ Code expires in ${m}:${s.toString().padStart(2,'0')}`;
+    el.style.color = secs < 300 ? '#E74C3C' : '#F39C12';
+    if(secs<=0){ clearInterval(timerInterval); el.textContent='⚠️ Code expired — generate a new one'; el.style.color='#E74C3C'; }
+  },1000);
+
+  document.getElementById('modal-step2').classList.add('open');
+}
+
+function showQRAgain(id, code, role, label){
+  // Just show QR for existing pending code
+  showQRModal(code, role, label);
+}
+
+async function regenerateCode(id, role, storeId, label){
+  // Expire old code
+  await pat('store_device_links', id, { expires_at: new Date().toISOString(), status: 'pending' });
+  // Generate new
+  const code = genCode();
+  const expires = new Date(Date.now() + 30*60*1000).toISOString();
+  await post('store_device_links',{
+    store_id: storeId,
+    code,
+    role,
+    label: label || (role==='driver'?'Driver Device':'Order Viewer'),
+    status: 'pending',
+    expires_at: expires
+  });
+  loadAll();
+  showQRModal(code, role, label||'Device');
+  toast('New code generated ✓');
+}
+
+function copyCode(){
+  const code = document.getElementById('qr-code-text').textContent;
+  copyText(code);
+}
+
+function copyText(text){
+  navigator.clipboard.writeText(text).then(()=>{
+    toast('Copied! ' + text);
+  });
+}
+
+async function revokeDevice(id, name){
+  if(!confirm(`Revoke "${name}"?\n\nThis device will be disconnected immediately and will need a new code to reconnect.`)) return;
+  await pat('store_device_links', id, { status: 'revoked' });
+  toast('Device revoked — ' + name);
+  loadAll();
+}
+
+function closeAll(){
+  document.getElementById('modal-step1').classList.remove('open');
+  document.getElementById('modal-step2').classList.remove('open');
+  if(timerInterval) clearInterval(timerInterval);
+}
+
+loadAll();
+</script>
+</body>
+</html>
