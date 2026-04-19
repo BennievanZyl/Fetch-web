@@ -413,9 +413,20 @@ function openAddProduct(){
         <div><label class="form-label">Price (ZAR) *</label><input type="number" id="p-price" placeholder="0.00" step="0.01" style="width:100%"></div>
         <div><label class="form-label">Category</label><input type="text" id="p-cat" placeholder="e.g. Burgers" style="width:100%"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><label class="form-label">Prep Time (min)</label><input type="number" id="p-prep" value="15" style="width:100%"></div>
-        <div><label class="form-label">Image URL (optional)</label><input type="text" id="p-img" placeholder="https://..." style="width:100%"></div>
+      <div><label class="form-label">Prep Time (min)</label><input type="number" id="p-prep" value="15" style="width:100%"></div>
+      <div>
+        <label class="form-label">Product Photo</label>
+        <div id="p-img-preview" style="width:100%;height:120px;border-radius:10px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:#FAFAFA;overflow:hidden;position:relative" onclick="document.getElementById('p-img-file').click()">
+          <div id="p-img-placeholder"><div style="font-size:28px">📷</div><div style="font-size:13px;color:var(--muted);margin-top:6px">Click to upload photo</div><div style="font-size:11px;color:var(--muted)">JPG, PNG · Max 3MB</div></div>
+        </div>
+        <input type="file" id="p-img-file" accept="image/*" style="display:none" onchange="previewProductImg(this)">
+        <input type="hidden" id="p-img">
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <div style="height:1px;flex:1;background:var(--border)"></div>
+          <span style="font-size:11px;color:var(--muted)">or paste URL</span>
+          <div style="height:1px;flex:1;background:var(--border)"></div>
+        </div>
+        <input type="text" id="p-img-url" placeholder="https://..." style="width:100%;margin-top:8px;padding:8px 12px;border-radius:8px;border:1.5px solid var(--border);font-family:'DM Sans',sans-serif;font-size:13px;outline:none" oninput="syncImgUrl(this.value)">
       </div>
       <div class="toggle-row" style="background:#F7F7F7;border-radius:10px;padding:12px 14px">
         <span style="font-size:14px;font-weight:500">Available for order</span>
@@ -427,7 +438,7 @@ function openAddProduct(){
       </div>
       <div style="display:flex;gap:10px;margin-top:4px">
         <button class="btn btn-grey" style="flex:1" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-black" style="flex:2;padding:14px" onclick="saveProduct(null)">Save Product</button>
+        <button class="btn btn-black" style="flex:2;padding:14px" id="p-save-btn" onclick="saveProduct(null)">Save Product</button>
       </div>
     </div>`);
 }
@@ -444,9 +455,23 @@ function editProduct(p){
         <div><label class="form-label">Price (ZAR) *</label><input type="number" id="p-price" value="${p.price}" step="0.01" style="width:100%"></div>
         <div><label class="form-label">Category</label><input type="text" id="p-cat" value="${p.category||''}" style="width:100%"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><label class="form-label">Prep Time (min)</label><input type="number" id="p-prep" value="${p.prep_time_minutes||15}" style="width:100%"></div>
-        <div><label class="form-label">Image URL</label><input type="text" id="p-img" value="${p.image_url||''}" style="width:100%"></div>
+      <div><label class="form-label">Prep Time (min)</label><input type="number" id="p-prep" value="${p.prep_time_minutes||15}" style="width:100%"></div>
+      <div>
+        <label class="form-label">Product Photo</label>
+        <div id="p-img-preview" style="width:100%;height:120px;border-radius:10px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;background:#FAFAFA;overflow:hidden;position:relative" onclick="document.getElementById('p-img-file').click()">
+          ${p.image_url
+            ? `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"><span style="color:#fff;font-size:13px;font-weight:700">📷 Change Photo</span></div>`
+            : `<div id="p-img-placeholder"><div style="font-size:28px">📷</div><div style="font-size:13px;color:var(--muted);margin-top:6px">Click to upload photo</div><div style="font-size:11px;color:var(--muted)">JPG, PNG · Max 3MB</div></div>`
+          }
+        </div>
+        <input type="file" id="p-img-file" accept="image/*" style="display:none" onchange="previewProductImg(this)">
+        <input type="hidden" id="p-img" value="${p.image_url||''}">
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <div style="height:1px;flex:1;background:var(--border)"></div>
+          <span style="font-size:11px;color:var(--muted)">or paste URL</span>
+          <div style="height:1px;flex:1;background:var(--border)"></div>
+        </div>
+        <input type="text" id="p-img-url" value="${p.image_url||''}" placeholder="https://..." style="width:100%;margin-top:8px;padding:8px 12px;border-radius:8px;border:1.5px solid var(--border);font-family:'DM Sans',sans-serif;font-size:13px;outline:none" oninput="syncImgUrl(this.value)">
       </div>
       <div class="toggle-row" style="background:#F7F7F7;border-radius:10px;padding:12px 14px">
         <span style="font-size:14px;font-weight:500">Available for order</span>
@@ -458,7 +483,7 @@ function editProduct(p){
       </div>
       <div style="display:flex;gap:10px;margin-top:4px">
         <button class="btn btn-grey" style="flex:1" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-black" style="flex:2;padding:14px" onclick="saveProduct('${p.id}')">Update Product</button>
+        <button class="btn btn-black" style="flex:2;padding:14px" id="p-save-btn" onclick="saveProduct('${p.id}')">Update Product</button>
       </div>
     </div>`);
 }
@@ -694,6 +719,97 @@ async function deleteGroup(id,name){
   if(!confirm('Delete "'+name+'" and all its options?'))return;
   await del('product_option_groups',id);toast('Group deleted');loadMenu();
 }
+
+// ── Product Image Upload from PC ──────────────────────────
+let pendingImgFile = null;
+
+function previewProductImg(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) { alert('Image must be under 3MB'); return; }
+  pendingImgFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('p-img-preview');
+    if (preview) {
+      preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"><span style="color:#fff;font-size:13px;font-weight:700">📷 Change Photo</span></div>`;
+    }
+    const urlInput = document.getElementById('p-img-url');
+    if (urlInput) urlInput.value = '';
+    const hidden = document.getElementById('p-img');
+    if (hidden) hidden.value = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function syncImgUrl(val) {
+  const hidden = document.getElementById('p-img');
+  if (hidden) hidden.value = val;
+  pendingImgFile = null;
+  const preview = document.getElementById('p-img-preview');
+  if (preview && val) {
+    preview.innerHTML = `<img src="${val}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=padding:16px;text-align:center;color:#E74C3C;font-size:13px>⚠️ Image not found</div>'">`;
+  }
+}
+
+async function uploadPendingImgToStorage(productId) {
+  if (!pendingImgFile || !selectedStore) return null;
+  const ext = pendingImgFile.name.split('.').pop().toLowerCase();
+  const filename = selectedStore.id + '/' + productId + '_' + Date.now() + '.' + ext;
+  const r = await fetch(SB + '/storage/v1/object/product-images/' + filename, {
+    method: 'POST',
+    headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + (tok() || KEY), 'Content-Type': pendingImgFile.type, 'x-upsert': 'true' },
+    body: pendingImgFile
+  });
+  if (r.ok) {
+    pendingImgFile = null;
+    return SB + '/storage/v1/object/public/product-images/' + filename;
+  }
+  console.error('Upload failed:', await r.text());
+  return null;
+}
+
+// Wrap saveProduct to handle file uploads
+const origSaveProduct = saveProduct;
+saveProduct = async function(existingId) {
+  const name = document.getElementById('p-name')?.value.trim();
+  const price = parseFloat(document.getElementById('p-price')?.value) || 0;
+  if (!name || !price) { alert('Please enter a name and price.'); return; }
+
+  const btn = document.getElementById('p-save-btn');
+  if (btn) { btn.textContent = pendingImgFile ? 'Uploading image...' : 'Saving...'; btn.disabled = true; }
+
+  let imageUrl = document.getElementById('p-img')?.value || document.getElementById('p-img-url')?.value || null;
+  if (imageUrl === '') imageUrl = null;
+
+  if (pendingImgFile) {
+    const pid = existingId || ('new_' + Date.now());
+    const uploaded = await uploadPendingImgToStorage(pid);
+    if (uploaded) { imageUrl = uploaded; }
+    else { toast('Image upload failed — saving without image', true); }
+  }
+
+  const body = {
+    store_id: selectedStore.id,
+    name,
+    description: document.getElementById('p-desc')?.value || null,
+    price,
+    category: document.getElementById('p-cat')?.value || 'General',
+    prep_time_minutes: parseInt(document.getElementById('p-prep')?.value) || 15,
+    image_url: imageUrl,
+    is_available: document.getElementById('p-avail')?.checked ?? true,
+    is_featured: document.getElementById('p-feat')?.checked ?? false
+  };
+
+  if (existingId) await patch('products', existingId, body);
+  else await post('products', body);
+
+  if (btn) { btn.textContent = existingId ? 'Update Product' : 'Save Product'; btn.disabled = false; }
+  closeModal();
+  pendingImgFile = null;
+  toast(existingId ? 'Product updated! ✓' : 'Product added! ✓');
+  loadMenu();
+};
 
 loadStores();
 </script>
