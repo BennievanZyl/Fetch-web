@@ -7,159 +7,76 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-
-:root { --green: #06C167; --black: #000; --white: #fff; --surface: #F7F7F7; --border: #E8E8E8; --muted: #8E8E8E; --danger: #E74C3C; --warning: #F39C12; }
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--black); display: flex; min-height: 100vh; }
-.sidebar { width: 240px; min-height: 100vh; background: var(--black); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; flex-shrink: 0; }
-.sidebar-logo { font-family: 'Syne', sans-serif; font-weight: 900; font-size: 22px; letter-spacing: -1px; color: var(--white); padding: 28px 24px 4px; }
-.sidebar-logo span { color: var(--green); }
-.sidebar-badge { font-size: 10px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: 1px; padding: 0 24px 24px; }
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; }
-.sidebar-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.6); text-decoration: none; transition: all 0.2s; }
-.sidebar-item:hover { background: rgba(255,255,255,0.08); color: var(--white); }
-.sidebar-item.active { background: rgba(6,193,103,0.15); color: var(--green); font-weight: 700; }
-.sidebar-signout { margin: 16px 12px; padding: 12px; border-radius: 10px; background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.2); color: var(--danger); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-.sidebar-signout:hover { background: rgba(231,76,60,0.2); }
-.main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-.topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
-.topbar h1 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
-.topbar-right { display: flex; align-items: center; gap: 12px; }
-.content { padding: 32px; flex: 1; }
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
-.stat-card { background: var(--white); border-radius: 16px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-.stat-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
-.stat-num { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 900; color: var(--black); line-height: 1; }
-.stat-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
-.table-card { background: var(--white); border-radius: 16px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 24px; }
-.table-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.table-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; }
-table { width: 100%; border-collapse: collapse; }
-thead th { background: var(--surface); padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); white-space: nowrap; }
-tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
-tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: #fafafa; }
-tbody td { padding: 14px 16px; font-size: 14px; color: var(--black); vertical-align: middle; }
-.td-muted { color: var(--muted); font-size: 13px; }
-.btn { padding: 8px 16px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; text-decoration: none; }
-.btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 7px; }
-.btn-green { background: var(--green); color: var(--white); }
-.btn-green:hover { filter: brightness(0.9); }
-.btn-black { background: var(--black); color: var(--white); }
-.btn-black:hover { background: #222; }
-.btn-red { background: rgba(231,76,60,0.1); color: var(--danger); border: 1px solid rgba(231,76,60,0.2); }
-.btn-red:hover { background: rgba(231,76,60,0.2); }
-.btn-grey { background: var(--surface); color: var(--black); border: 1px solid var(--border); }
-.btn-grey:hover { background: #ebebeb; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.filter-tabs { display: flex; gap: 4px; background: var(--surface); border-radius: 10px; padding: 4px; margin-bottom: 20px; width: fit-content; }
-.filter-tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.2s; border: none; background: none; font-family: 'DM Sans', sans-serif; }
-.filter-tab.active { background: var(--white); color: var(--black); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-.search-input { padding: 10px 16px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--white); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--black); outline: none; width: 280px; transition: border-color 0.2s; }
-.search-input:focus { border-color: var(--green); }
-.modal-form-group { margin-bottom: 16px; }
-.modal-form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--black); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-.modal-form-group input, .modal-form-group select { width: 100%; padding: 12px 14px; border-radius: 10px; background: var(--surface); border: 1.5px solid var(--border); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--black); outline: none; }
-.modal-form-group input:focus, .modal-form-group select:focus { border-color: var(--green); }
-.modal-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 900; margin-bottom: 6px; }
-.modal-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
-.modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
-.code-display { font-family: monospace; font-size: 36px; font-weight: 900; color: var(--green); text-align: center; letter-spacing: 4px; background: rgba(6,193,103,0.08); border: 2px dashed rgba(6,193,103,0.3); border-radius: 12px; padding: 20px; margin: 20px 0; }
-.badge { display: inline-flex; align-items: center; justify-content: center; background: var(--green); color: var(--white); border-radius: 999px; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 6px; }
-.badge-red { background: var(--danger); }
-@media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; } .stats-grid { grid-template-columns: 1fr 1fr; } .content { padding: 16px; } .topbar { padding: 16px; } }
-@media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
-
+:root{--green:#06C167;--black:#000;--white:#fff;--surface:#F7F7F7;--border:#E8E8E8;--muted:#8E8E8E;--danger:#E74C3C;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--black);display:flex;min-height:100vh;}
+.sidebar{width:240px;min-height:100vh;background:var(--black);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;}
+.sidebar-logo{font-family:'Syne',sans-serif;font-weight:900;font-size:22px;letter-spacing:-1px;color:var(--white);padding:28px 24px 4px;}
+.sidebar-logo span{color:var(--green);}
+.sidebar-badge{font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;padding:0 24px 24px;}
+.sidebar-nav{flex:1;display:flex;flex-direction:column;gap:2px;padding:8px 12px;}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;font-size:14px;font-weight:500;color:rgba(255,255,255,0.6);text-decoration:none;transition:all 0.2s;}
+.sidebar-item:hover{background:rgba(255,255,255,0.08);color:var(--white);}
+.sidebar-item.active{background:rgba(6,193,103,0.15);color:var(--green);font-weight:700;}
+.sidebar-signout{margin:16px 12px;padding:12px;border-radius:10px;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);color:var(--danger);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
+.topbar h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:900;}
+.content{padding:32px;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--white);border-radius:16px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.stat-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;}
+.stat-num{font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:var(--black);line-height:1;}
+.table-card{background:var(--white);border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+table{width:100%;border-collapse:collapse;}
+thead th{background:var(--surface);padding:12px 16px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border);}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#fafafa;}
+tbody td{padding:14px 16px;font-size:14px;color:var(--black);vertical-align:middle;}
+.td-muted{color:var(--muted);font-size:13px;}
+.btn{padding:8px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;text-decoration:none;}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:7px;}
+.btn-green{background:var(--green);color:var(--white);}
+.btn-black{background:var(--black);color:var(--white);}
+.btn-red{background:rgba(231,76,60,0.1);color:var(--danger);border:1px solid rgba(231,76,60,0.2);}
+.btn-grey{background:var(--surface);color:var(--black);border:1px solid var(--border);}
+.search-input{padding:10px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--black);outline:none;width:280px;}
+.search-input:focus{border-color:var(--green);}
+.badge{display:inline-flex;align-items:center;justify-content:center;background:var(--green);color:var(--white);border-radius:999px;font-size:11px;font-weight:700;min-width:20px;height:20px;padding:0 6px;margin-left:6px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;}
+.modal-box{background:#fff;border-radius:20px;padding:40px;max-width:520px;width:100%;position:relative;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:900;margin-bottom:6px;}
+.modal-sub{font-size:14px;color:var(--muted);margin-bottom:24px;}
+@media(max-width:900px){.sidebar{display:none;}.main{margin-left:0;}.stats-grid{grid-template-columns:1fr 1fr;}.content{padding:16px;}}
 </style>
-<script>
-const SUPABASE_URL = 'https://errbnpeswpjmdsvehduz.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycmJucGVzd3BqbWRzdmVoZHV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDgzMDMsImV4cCI6MjA4NjgyNDMwM30.ZYeZUV6PFs_yATPMUisH9vzXwWaMpBUwEn6Dsy6F0z8';
-
-function getToken() { return localStorage.getItem('fetch_admin_token'); }
-function authHeaders() {
-  return { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${getToken() || SUPABASE_KEY}` };
-}
-function guardAdmin() { if (!getToken()) { window.location.href = '/admin'; return false; } return true; }
-function signOut() { localStorage.removeItem('fetch_admin_token'); localStorage.removeItem('fetch_admin_user'); window.location.href = '/admin'; }
-
-async function sbGet(table, params = '') {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${params}`, { headers: authHeaders() });
-  return res.json();
-}
-async function sbPost(table, body) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, { method: 'POST', headers: { ...authHeaders(), 'Prefer': 'return=representation' }, body: JSON.stringify(body) });
-  return res.json();
-}
-async function sbPatch(table, id, body) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'PATCH', headers: { ...authHeaders(), 'Prefer': 'return=representation' }, body: JSON.stringify(body) });
-  return res.json();
-}
-async function sbDelete(table, id) { await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'DELETE', headers: authHeaders() }); }
-
-function generateCode() { return 'FETCH-' + Math.random().toString(36).substring(2, 8).toUpperCase(); }
-function formatZAR(amount) { return 'R' + parseFloat(amount || 0).toFixed(2); }
-function timeAgo(dateStr) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
-function formatDate(dateStr) {
-  if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-function statusPill(status) {
-  const map = { pending:['#FFF8E6','#9A6500'], confirmed:['#E6F0FB','#1A5FA5'], preparing:['#FFF8E6','#9A6500'], ready:['#F3E6FB','#6B21A8'], picked_up:['#E6F9F0','#0A7A45'], delivered:['#E6F9F0','#0A7A45'], cancelled:['#FDECEA','#B91C1C'], active:['#E6F9F0','#0A7A45'], onboarding:['#F7F7F7','#8E8E8E'], paused:['#FFF8E6','#9A6500'], suspended:['#FDECEA','#B91C1C'], approved:['#E6F9F0','#0A7A45'], rejected:['#FDECEA','#B91C1C'], driver:['#E6F9F0','#0A7A45'], suspended_driver:['#FDECEA','#B91C1C'] };
-  const [bg, color] = map[status] || ['#F7F7F7','#8E8E8E'];
-  const label = status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-  return `<span style="background:${bg};color:${color};padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap">${label}</span>`;
-}
-function buildSidebar(activePage) {
-  const pages = [
-    { id:'dashboard', icon:'📊', label:'Dashboard',    href:'/admin/dashboard' },
-    { id:'enquiries', icon:'📋', label:'Enquiries',    href:'/admin/enquiries' },
-    { id:'stores',    icon:'🏪', label:'Stores',       href:'/admin/stores' },
-    { id:'codes',     icon:'🎟️', label:'Invite Codes', href:'/admin/codes' },
-    { id:'orders',    icon:'🛒', label:'Orders',       href:'/admin/orders' },
-    { id:'drivers',   icon:'🚗', label:'Drivers',      href:'/admin/drivers' },
-  ];
-  const items = pages.map(p => `<a href="${p.href}" class="sidebar-item ${p.id===activePage?'active':''}"><span>${p.icon}</span><span>${p.label}</span></a>`).join('');
-  return `<aside class="sidebar"><div class="sidebar-logo">FETCH<span>.</span></div><div class="sidebar-badge">Admin</div><nav class="sidebar-nav">${items}</nav><button class="sidebar-signout" onclick="signOut()">Sign Out</button></aside>`;
-}
-function showModal(html) {
-  const overlay = document.createElement('div');
-  overlay.id = 'modal-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto';
-  overlay.innerHTML = `<div style="background:#fff;border-radius:20px;padding:40px;max-width:520px;width:100%;position:relative">${html}<button onclick="closeModal()" style="position:absolute;top:16px;right:16px;background:#f7f7f7;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button></div>`;
-  overlay.addEventListener('click', e => { if(e.target===overlay) closeModal(); });
-  document.body.appendChild(overlay);
-}
-function closeModal() { const el = document.getElementById('modal-overlay'); if(el) el.remove(); }
-function copyToClipboard(text, btn) {
-  navigator.clipboard.writeText(text).then(() => { const o=btn.textContent; btn.textContent='Copied! ✓'; btn.style.background='#06C167'; btn.style.color='#fff'; setTimeout(()=>{btn.textContent=o;btn.style.background='';btn.style.color='';},2000); });
-}
-function whatsappLink(phone, code, ownerName, storeName) {
-  const num = (phone||'').replace(/\D/g,'').replace(/^0/,'27');
-  const msg = encodeURIComponent(`Hi ${ownerName}! 👋 Welcome to Fetch 🎉\n\nYour store *${storeName}* has been approved!\n\nDownload the Fetch app and enter your Partner Code:\n\n*${code}*\n\nYour code expires in 30 days. Reply if you need help!`);
-  return `https://wa.me/${num}?text=${msg}`;
-}
-
-</script>
 </head>
 <body>
-<div id="sidebar-wrap"></div>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">FETCH<span>.</span></div>
+  <div class="sidebar-badge">Admin</div>
+  <nav class="sidebar-nav">
+    <a href="/admin/dashboard" class="sidebar-item"><span>📊</span><span>Dashboard</span></a>
+    <a href="/admin/enquiries" class="sidebar-item"><span>📋</span><span>Enquiries</span></a>
+    <a href="/admin/stores" class="sidebar-item active"><span>🏪</span><span>Stores</span></a>
+    <a href="/admin/codes" class="sidebar-item"><span>🎟️</span><span>Invite Codes</span></a>
+    <a href="/admin/orders" class="sidebar-item"><span>🛒</span><span>Orders</span></a>
+    <a href="/admin/drivers" class="sidebar-item"><span>🚗</span><span>Drivers</span></a>
+    <a href="/admin/menu" class="sidebar-item"><span>🍽️</span><span>Menu Builder</span></a>
+  </nav>
+  <button class="sidebar-signout" onclick="signOut()">Sign Out</button>
+</aside>
+
 <div class="main">
   <div class="topbar">
     <h1>Stores <span id="store-count" class="badge" style="display:none"></span></h1>
-    <div class="topbar-right">
+    <div style="display:flex;gap:12px;align-items:center">
       <input type="text" class="search-input" placeholder="Search stores..." oninput="filterStores(this.value)">
     </div>
   </div>
   <div class="content">
-    <div class="stats-grid" style="margin-bottom:24px">
+    <div class="stats-grid">
       <div class="stat-card"><div class="stat-label">Total Stores</div><div class="stat-num" id="s-total">—</div></div>
       <div class="stat-card"><div class="stat-label" style="color:#06C167">Live</div><div class="stat-num" id="s-live" style="color:#06C167">—</div></div>
       <div class="stat-card"><div class="stat-label" style="color:#F39C12">Onboarding</div><div class="stat-num" id="s-onboard" style="color:#F39C12">—</div></div>
@@ -168,76 +85,138 @@ function whatsappLink(phone, code, ownerName, storeName) {
     <div class="table-card">
       <table>
         <thead><tr><th>Store Name</th><th>Address</th><th>Status</th><th>Delivery Fee</th><th>Created</th><th>Actions</th></tr></thead>
-        <tbody id="stores-tbody"><tr><td colspan="6" style="text-align:center;padding:40px;color:#8E8E8E">Loading...</td></tr></tbody>
+        <tbody id="stores-tbody">
+          <tr><td colspan="6" style="text-align:center;padding:40px;color:#8E8E8E">Loading stores...</td></tr>
+        </tbody>
       </table>
     </div>
   </div>
 </div>
-<script>
-  guardAdmin();
-  document.getElementById('sidebar-wrap').innerHTML = buildSidebar('stores');
-  let allStores = [];
 
-  async function loadStores() {
-    allStores = await sbGet('stores', '?order=created_at.desc&select=*');
-    if (!Array.isArray(allStores)) allStores = [];
-    const count = document.getElementById('store-count');
-    count.textContent = allStores.length; count.style.display = 'inline-flex';
+<div id="modal-overlay" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box" id="modal-box"></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://errbnpeswpjmdsvehduz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycmJucGVzd3BqbWRzdmVoZHV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDgzMDMsImV4cCI6MjA4NjgyNDMwM30.ZYeZUV6PFs_yATPMUisH9vzXwWaMpBUwEn6Dsy6F0z8';
+
+function getToken(){ return localStorage.getItem('fetch_admin_token'); }
+function signOut(){ localStorage.removeItem('fetch_admin_token'); localStorage.removeItem('fetch_admin_user'); window.location.href='/admin'; }
+
+function hdrs(){
+  return {
+    'Content-Type':'application/json',
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + (getToken() || SUPABASE_KEY)
+  };
+}
+
+if(!getToken()){ window.location.href='/admin'; }
+
+async function query(table, params){
+  const res = await fetch(SUPABASE_URL+'/rest/v1/'+table+(params||''), { headers: hdrs() });
+  const data = await res.json();
+  console.log(table, res.status, data);
+  return data;
+}
+
+async function patch(table, id, body){
+  const res = await fetch(SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+id, {
+    method:'PATCH', headers:{...hdrs(),'Prefer':'return=representation'}, body:JSON.stringify(body)
+  });
+  return res.json();
+}
+
+function formatDate(d){ return d ? new Date(d).toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'}) : '—'; }
+function formatZAR(n){ return 'R'+parseFloat(n||0).toFixed(2); }
+
+function statusPill(s){
+  const m={active:['#E6F9F0','#0A7A45'],onboarding:['#F7F7F7','#8E8E8E'],paused:['#FFF8E6','#9A6500'],suspended:['#FDECEA','#B91C1C']};
+  const [bg,c]=m[s]||['#F7F7F7','#8E8E8E'];
+  return '<span style="background:'+bg+';color:'+c+';padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">'+s.charAt(0).toUpperCase()+s.slice(1)+'</span>';
+}
+
+function showModal(html){ document.getElementById('modal-box').innerHTML=html; document.getElementById('modal-overlay').style.display='flex'; }
+function closeModal(){ document.getElementById('modal-overlay').style.display='none'; }
+
+let allStores = [];
+
+async function loadStores(){
+  const tbody = document.getElementById('stores-tbody');
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#8E8E8E">Loading...</td></tr>';
+  
+  try {
+    const data = await query('stores','?order=created_at.desc&select=*');
+    
+    if(!Array.isArray(data)){
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#E74C3C">Error loading stores: '+JSON.stringify(data)+'</td></tr>';
+      return;
+    }
+    
+    allStores = data;
+    const badge = document.getElementById('store-count');
+    badge.textContent = allStores.length; badge.style.display='inline-flex';
     document.getElementById('s-total').textContent = allStores.length;
     document.getElementById('s-live').textContent = allStores.filter(s=>s.status==='active').length;
     document.getElementById('s-onboard').textContent = allStores.filter(s=>s.status==='onboarding').length;
     document.getElementById('s-paused').textContent = allStores.filter(s=>s.status==='paused'||s.status==='suspended').length;
     renderStores(allStores);
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#E74C3C">Exception: '+e.message+'</td></tr>';
   }
+}
 
-  function filterStores(q) {
-    renderStores(allStores.filter(s => (s.name||'').toLowerCase().includes(q.toLowerCase()) || (s.address||'').toLowerCase().includes(q.toLowerCase())));
-  }
+function filterStores(q){
+  renderStores(allStores.filter(s=>(s.name||'').toLowerCase().includes(q.toLowerCase())||(s.address||'').toLowerCase().includes(q.toLowerCase())));
+}
 
-  function renderStores(data) {
-    const tbody = document.getElementById('stores-tbody');
-    if (!data.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:48px;color:#8E8E8E"><div style="font-size:32px;margin-bottom:12px">🏪</div>No stores found</td></tr>`; return; }
-    tbody.innerHTML = data.map(s => `<tr>
-      <td><strong>${s.name}</strong>${s.description?`<div style="font-size:12px;color:#8E8E8E;margin-top:2px">${s.description.slice(0,60)}...</div>`:''}</td>
-      <td class="td-muted">${s.address||'—'}</td>
-      <td>${statusPill(s.status||'onboarding')}</td>
-      <td>${s.delivery_fee==0?'<span style="color:#06C167;font-weight:700">Free</span>':formatZAR(s.delivery_fee)}</td>
-      <td class="td-muted">${formatDate(s.created_at)}</td>
-      <td>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${s.status!=='active'?`<button class="btn btn-green btn-sm" onclick="activateStore('${s.id}')">▶ Activate</button>`:''}
-          ${s.status==='active'?`<button class="btn btn-grey btn-sm" onclick="pauseStore('${s.id}')">⏸ Pause</button>`:''}
-          ${s.status!=='suspended'?`<button class="btn btn-red btn-sm" onclick="suspendStore('${s.id}','${s.name}')">🚫 Suspend</button>`:''}
-          ${s.status==='suspended'?`<button class="btn btn-green btn-sm" onclick="activateStore('${s.id}')">↩ Reinstate</button>`:''}
-          <button class="btn btn-grey btn-sm" onclick="viewProducts('${s.id}','${s.name}')">🍽️ Menu</button>
-        </div>
-      </td>
-    </tr>`).join('');
+function renderStores(data){
+  const tbody = document.getElementById('stores-tbody');
+  if(!data.length){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:48px;color:#8E8E8E"><div style="font-size:32px;margin-bottom:12px">🏪</div>No stores found</td></tr>';
+    return;
   }
+  tbody.innerHTML = data.map(s=>'<tr>'+
+    '<td><strong>'+s.name+'</strong>'+(s.description?'<div style="font-size:12px;color:#8E8E8E;margin-top:2px">'+s.description.slice(0,50)+'...</div>':'')+'</td>'+
+    '<td class="td-muted">'+(s.address||'—')+'</td>'+
+    '<td>'+statusPill(s.status||'onboarding')+'</td>'+
+    '<td>'+(s.delivery_fee==0?'<span style="color:#06C167;font-weight:700">Free</span>':formatZAR(s.delivery_fee))+'</td>'+
+    '<td class="td-muted">'+formatDate(s.created_at)+'</td>'+
+    '<td><div style="display:flex;gap:6px;flex-wrap:wrap">'+
+      (s.status!=='active'?'<button class="btn btn-green btn-sm" onclick="activateStore(\''+s.id+'\')">▶ Activate</button>':'')+
+      (s.status==='active'?'<button class="btn btn-grey btn-sm" onclick="pauseStore(\''+s.id+'\')">⏸ Pause</button>':'')+
+      (s.status!=='suspended'?'<button class="btn btn-red btn-sm" onclick="suspendStore(\''+s.id+'\',\''+s.name+'\')">🚫 Suspend</button>':'')+
+      (s.status==='suspended'?'<button class="btn btn-green btn-sm" onclick="activateStore(\''+s.id+'\')">↩ Reinstate</button>':'')+
+      '<button class="btn btn-grey btn-sm" onclick="viewProducts(\''+s.id+'\',\''+s.name+'\')">🍽️ Menu</button>'+
+    '</div></td>'+
+  '</tr>').join('');
+}
 
-  async function activateStore(id) { await sbPatch('stores', id, { is_active: true, status: 'active', activated_at: new Date().toISOString() }); loadStores(); }
-  async function pauseStore(id) { await sbPatch('stores', id, { is_active: false, status: 'paused', paused_at: new Date().toISOString() }); loadStores(); }
-  async function suspendStore(id, name) {
-    if (!confirm(`Suspend ${name}?`)) return;
-    await sbPatch('stores', id, { is_active: false, status: 'suspended', suspended_at: new Date().toISOString() }); loadStores();
-  }
-  async function viewProducts(storeId, storeName) {
-    const products = await sbGet('products', `?store_id=eq.${storeId}&order=category,name`);
-    const rows = Array.isArray(products) && products.length
-      ? products.map(p => `<tr><td><strong>${p.name}</strong></td><td class="td-muted">${p.category||'General'}</td><td><strong>${formatZAR(p.price)}</strong></td><td>${p.is_available?'<span style="color:#06C167;font-weight:700">✓</span>':'<span style="color:#E74C3C">✗</span>'}</td></tr>`).join('')
-      : '<tr><td colspan="4" style="text-align:center;padding:24px;color:#8E8E8E">No products yet</td></tr>';
-    showModal(`
-      <div class="modal-title">🍽️ ${storeName}</div>
-      <div class="modal-sub">${Array.isArray(products)?products.length:0} products</div>
-      <div style="overflow-y:auto;max-height:400px">
-        <table style="width:100%;border-collapse:collapse">
-          <thead><tr style="background:#F7F7F7"><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#8E8E8E;text-transform:uppercase">Name</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#8E8E8E;text-transform:uppercase">Category</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#8E8E8E;text-transform:uppercase">Price</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#8E8E8E;text-transform:uppercase">Available</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    `);
-  }
-  loadStores();
+async function activateStore(id){ await patch('stores',id,{is_active:true,status:'active',activated_at:new Date().toISOString()}); loadStores(); }
+async function pauseStore(id){ await patch('stores',id,{is_active:false,status:'paused',paused_at:new Date().toISOString()}); loadStores(); }
+async function suspendStore(id,name){
+  if(!confirm('Suspend '+name+'?')) return;
+  await patch('stores',id,{is_active:false,status:'suspended',suspended_at:new Date().toISOString()}); loadStores();
+}
+
+async function viewProducts(storeId,storeName){
+  const products = await query('products','?store_id=eq.'+storeId+'&order=category,name');
+  const rows = Array.isArray(products)&&products.length
+    ? products.map(p=>'<tr><td><strong>'+p.name+'</strong></td><td style="color:#8E8E8E;font-size:13px">'+(p.category||'General')+'</td><td><strong>'+formatZAR(p.price)+'</strong></td><td>'+(p.is_available?'<span style="color:#06C167;font-weight:700">✓ Available</span>':'<span style="color:#E74C3C">✗ Off</span>')+'</td></tr>').join('')
+    : '<tr><td colspan="4" style="text-align:center;padding:24px;color:#8E8E8E">No products yet</td></tr>';
+  showModal(
+    '<div style="font-family:\'Syne\',sans-serif;font-size:20px;font-weight:900;margin-bottom:6px">🍽️ '+storeName+'</div>'+
+    '<div style="font-size:14px;color:#8E8E8E;margin-bottom:20px">'+(Array.isArray(products)?products.length:0)+' products</div>'+
+    '<div style="overflow-y:auto;max-height:400px">'+
+    '<table style="width:100%;border-collapse:collapse">'+
+    '<thead><tr style="background:#F7F7F7"><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#8E8E8E;text-transform:uppercase">Name</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#8E8E8E;text-transform:uppercase">Category</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#8E8E8E;text-transform:uppercase">Price</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#8E8E8E;text-transform:uppercase">Status</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody></table></div>'+
+    '<button onclick="closeModal()" style="margin-top:16px;width:100%;padding:12px;border-radius:10px;background:#F7F7F7;border:1px solid #E8E8E8;cursor:pointer;font-size:14px;font-weight:600">Close</button>'
+  );
+}
+
+loadStores();
 </script>
 </body>
 </html>

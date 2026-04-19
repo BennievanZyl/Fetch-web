@@ -125,6 +125,7 @@ function buildSidebar(activePage) {
     { id:'codes',     icon:'🎟️', label:'Invite Codes', href:'/admin/codes' },
     { id:'orders',    icon:'🛒', label:'Orders',       href:'/admin/orders' },
     { id:'drivers',   icon:'🚗', label:'Drivers',      href:'/admin/drivers' },
+    { id:'menu',      icon:'🍽️', label:'Menu Builder', href:'/admin/menu' },
   ];
   const items = pages.map(p => `<a href="${p.href}" class="sidebar-item ${p.id===activePage?'active':''}"><span>${p.icon}</span><span>${p.label}</span></a>`).join('');
   return `<aside class="sidebar"><div class="sidebar-logo">FETCH<span>.</span></div><div class="sidebar-badge">Admin</div><nav class="sidebar-nav">${items}</nav><button class="sidebar-signout" onclick="signOut()">Sign Out</button></aside>`;
