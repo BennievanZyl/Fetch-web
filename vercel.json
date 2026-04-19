@@ -9,6 +9,7 @@
     { "source": "/admin/codes", "destination": "/admin-codes.html" },
     { "source": "/admin/orders", "destination": "/admin-orders.html" },
     { "source": "/admin/drivers", "destination": "/admin-drivers.html" },
+    { "source": "/admin/devices", "destination": "/admin-devices.html" },
     { "source": "/admin/menu", "destination": "/admin-menu.html" }
   ]
 }
