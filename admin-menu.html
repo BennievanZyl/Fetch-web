@@ -569,21 +569,33 @@ async function saveGroup(){
   if(!name){alert('Please enter a group name.');return;}
   const valid=optionRows.filter(o=>o.name.trim());
   if(!valid.length){alert('Please add at least one option.');return;}
-  const body={product_id:editingGroupProductId,name,description:document.getElementById('g-desc').value||null,is_required:document.getElementById('g-required').checked,max_selections:parseInt(document.getElementById('g-maxsel').value)||1,min_selections:document.getElementById('g-required').checked?1:0};
-  let gid=editingGroupId;
-  if(gid){
-    await patch('product_option_groups',gid,body);
-    await delWhere('product_options','group_id',gid);
-  } else {
-    const res=await post('product_option_groups',body);
-    const ng=Array.isArray(res)?res[0]:res;
-    if(!ng||!ng.id){alert('Failed to create group');return;}
-    gid=ng.id;
+  const saveBtn=document.querySelector('#modal-box .btn-black');
+  if(saveBtn){saveBtn.textContent='Saving...';saveBtn.disabled=true;}
+  try{
+    const body={product_id:editingGroupProductId,name,description:document.getElementById('g-desc').value||null,is_required:document.getElementById('g-required').checked,max_selections:parseInt(document.getElementById('g-maxsel').value)||1,min_selections:document.getElementById('g-required').checked?1:0,sort_order:0};
+    let gid=editingGroupId;
+    if(gid){
+      const pr=await patch('product_option_groups',gid,body);
+      if(pr&&pr.code){throw new Error(pr.message||pr.code);}
+      await delWhere('product_options','group_id',gid);
+    } else {
+      const res=await post('product_option_groups',body);
+      if(!res){throw new Error('No response from server');}
+      if(res.code||res.error){throw new Error(res.message||res.error||res.code);}
+      const ng=Array.isArray(res)?res[0]:res;
+      if(!ng||!ng.id){throw new Error('Group created but no ID returned: '+JSON.stringify(res));}
+      gid=ng.id;
+    }
+    for(let i=0;i<valid.length;i++){
+      const oRes=await post('product_options',{group_id:gid,name:valid[i].name.trim(),price_modifier:parseFloat(valid[i].price)||0,is_available:true,sort_order:i});
+      if(oRes&&oRes.code){console.warn('Option insert warning:',oRes);}
+    }
+    closeModal();toast(editingGroupId?'Group updated! ✓':'Group added! ✓');loadMenu();
+  } catch(err){
+    console.error('saveGroup error:',err);
+    alert('Error: '+err.message);
+    if(saveBtn){saveBtn.textContent='Save Group & Options';saveBtn.disabled=false;}
   }
-  for(let i=0;i<valid.length;i++){
-    await post('product_options',{group_id:gid,name:valid[i].name.trim(),price_modifier:parseFloat(valid[i].price)||0,is_available:true,sort_order:i});
-  }
-  closeModal();toast(editingGroupId?'Group updated!':'Group added!');loadMenu();
 }
 
 async function deleteGroup(id,name){
