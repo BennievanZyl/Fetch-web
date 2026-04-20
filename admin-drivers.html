@@ -380,8 +380,8 @@ let selectedZoneIds=[], driverZoneMap={};
 async function loadAll(){
   const[drivers,orders,devices,stores,zones]=await Promise.all([
     get('store_drivers','?order=created_at.desc&select=*'),
-    get('orders','?status=eq.delivered&select=id,total_amount,delivery_address,created_at,driver_id,store_id'),
-    get('store_device_links','?role=eq.driver&status=eq.active&select=id,label,device_name,store_id'),
+    get('orders','?status=eq.delivered&select=id,total_amount,delivery_address,created_at,driver_id,store_id&order=created_at.desc&limit=500'),
+    get('store_device_links','?role=eq.driver&status=eq.active&select=id,label,device_name,store_id,linked_at'),
     get('stores','?select=id,name'),
     get('delivery_zones','?is_active=eq.true&select=*,store:stores(name)&order=zone_name')
   ]);
@@ -412,12 +412,32 @@ async function loadAll(){
   populateSelects();
 }
 
+// Match orders to a driver using ALL possible ID fields:
+// orders.driver_id may be stored as:
+//   1. store_drivers.id (driver profile UUID)
+//   2. store_drivers.device_link_id (linked device UUID)
+//   3. profiles.id (user auth UUID) — via linked device
+function getDriverOrders(driver){
+  return allOrders.filter(o => {
+    if(!o.driver_id) return false;
+    // Match by store_drivers.id directly
+    if(o.driver_id === driver.id) return true;
+    // Match by device_link_id
+    if(driver.device_link_id && o.driver_id === driver.device_link_id) return true;
+    // Match by linked device's linked profile
+    const dev = allDevices.find(dv => dv.id === driver.device_link_id);
+    if(dev && o.driver_id === dev.id) return true;
+    return false;
+  });
+}
+
 function renderTable(data){
   const tb=document.getElementById('tbody');
   if(!data.length){tb.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:32px;margin-bottom:12px">👥</div>No drivers yet. Add your first driver.</td></tr>`;return;}
   tb.innerHTML=data.map(d=>{
-    const trips=allOrders.filter(o=>o.driver_id===d.device_link_id).length;
-    const earn=allOrders.filter(o=>o.driver_id===d.device_link_id).reduce((s,o)=>s+parseFloat(o.total_amount||0)*(d.commission_rate||15)/100,0);
+    const driverOrders=getDriverOrders(d);
+    const trips=driverOrders.length;
+    const earn=driverOrders.reduce((s,o)=>s+parseFloat(o.total_amount||0)*(d.commission_rate||15)/100,0);
     const dev=allDevices.find(dv=>dv.id===d.device_link_id);
     const dZones=driverZoneMap[d.id]||[];
     const zoneNames=dZones.map(zid=>{const z=allZones.find(x=>x.id===zid);return z?z.zone_name:null;}).filter(Boolean);
@@ -467,6 +487,14 @@ function openDetail(id){
   document.getElementById('ip-reg').textContent=d.vehicle_registration||'—';
   document.getElementById('ip-comm').textContent=(d.commission_rate||15)+'%';
   document.getElementById('ip-device').textContent=dev?(dev.device_name||dev.label||'Linked Device'):'No device linked';
+
+  // Debug: show what IDs we're matching against
+  const driverOrders = getDriverOrders(d);
+  const sampleDriverIds = [...new Set(allOrders.slice(0,5).map(o=>o.driver_id).filter(Boolean))];
+  console.log('[debug] driver.id:', d.id);
+  console.log('[debug] driver.device_link_id:', d.device_link_id);
+  console.log('[debug] sample order driver_ids:', sampleDriverIds);
+  console.log('[debug] matched orders:', driverOrders.length);
   document.getElementById('detail-overlay').classList.add('open');
   switchTab('profile',document.querySelector('.tab-btn'));
   renderDriverZonesPanel(d.id);
@@ -478,7 +506,7 @@ function editCurrent(){if(currentDriver)openEdit(currentDriver.id);}
 
 function loadTrips(){
   if(!currentDriver)return;
-  const trips=allOrders.filter(o=>o.driver_id===currentDriver.device_link_id&&new Date(o.created_at)>=periodStart(tPeriod));
+  const trips=getDriverOrders(currentDriver).filter(o=>new Date(o.created_at)>=periodStart(tPeriod));
   const rate=currentDriver.commission_rate||15;
   const earn=trips.reduce((s,o)=>s+parseFloat(o.total_amount||0)*rate/100,0);
   const avg=trips.length?earn/trips.length:0;
@@ -497,7 +525,7 @@ function setTP(p,btn){tPeriod=p;document.querySelectorAll('#tab-trips .pchip').f
 
 function loadEarnings(){
   if(!currentDriver)return;
-  const trips=allOrders.filter(o=>o.driver_id===currentDriver.device_link_id&&new Date(o.created_at)>=periodStart(ePeriod));
+  const trips=getDriverOrders(currentDriver).filter(o=>new Date(o.created_at)>=periodStart(ePeriod));
   const rate=currentDriver.commission_rate||15;
   const total=trips.reduce((s,o)=>s+parseFloat(o.total_amount||0)*rate/100,0);
   const avg=trips.length?total/trips.length:0;
