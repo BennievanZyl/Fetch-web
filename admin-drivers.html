@@ -380,7 +380,7 @@ let selectedZoneIds=[], driverZoneMap={};
 async function loadAll(){
   const[drivers,orders,devices,stores,zones]=await Promise.all([
     get('store_drivers','?order=created_at.desc&select=*'),
-    get('orders','?status=eq.delivered&select=id,total_amount,delivery_address,created_at,driver_id,store_id&order=created_at.desc&limit=500'),
+    get('orders','?status=eq.delivered&select=id,total_amount,delivery_address,created_at,driver_id,store_driver_id,store_id&order=created_at.desc&limit=500'),
     get('store_device_links','?role=eq.driver&status=eq.active&select=id,label,device_name,store_id,linked_at'),
     get('stores','?select=id,name'),
     get('delivery_zones','?is_active=eq.true&select=*,store:stores(name)&order=zone_name')
@@ -412,23 +412,36 @@ async function loadAll(){
   populateSelects();
 }
 
-// Match orders to a driver using ALL possible ID fields:
-// orders.driver_id may be stored as:
-//   1. store_drivers.id (driver profile UUID)
-//   2. store_drivers.device_link_id (linked device UUID)
-//   3. profiles.id (user auth UUID) — via linked device
+// Match orders to a driver using ALL possible ID fields
 function getDriverOrders(driver){
-  return allOrders.filter(o => {
-    if(!o.driver_id) return false;
-    // Match by store_drivers.id directly
+  // Log for debugging
+  console.log('[web-debug] matching driver:', driver.full_name);
+  console.log('[web-debug] driver.id:', driver.id);
+  console.log('[web-debug] driver.profile_id:', driver.profile_id);
+  console.log('[web-debug] driver.device_link_id:', driver.device_link_id);
+  console.log('[web-debug] total orders in memory:', allOrders.length);
+  if(allOrders.length > 0) {
+    console.log('[web-debug] sample order:', {
+      driver_id: allOrders[0].driver_id,
+      store_driver_id: allOrders[0].store_driver_id
+    });
+  }
+
+  const matched = allOrders.filter(o => {
+    if(!o.driver_id && !o.store_driver_id) return false;
+    // Match by store_driver_id = store_drivers.id ✅
+    if(o.store_driver_id && o.store_driver_id === driver.id) return true;
+    // Match by driver_id = profile_id (auth UUID) ✅ KEY FIX
+    if(driver.profile_id && o.driver_id === driver.profile_id) return true;
+    // Match by driver_id = store_drivers.id (fallback)
     if(o.driver_id === driver.id) return true;
-    // Match by device_link_id
+    // Match by device_link_id (legacy fallback)
     if(driver.device_link_id && o.driver_id === driver.device_link_id) return true;
-    // Match by linked device's linked profile
-    const dev = allDevices.find(dv => dv.id === driver.device_link_id);
-    if(dev && o.driver_id === dev.id) return true;
     return false;
   });
+
+  console.log('[web-debug] matched orders:', matched.length);
+  return matched;
 }
 
 function renderTable(data){
@@ -488,13 +501,13 @@ function openDetail(id){
   document.getElementById('ip-comm').textContent=(d.commission_rate||15)+'%';
   document.getElementById('ip-device').textContent=dev?(dev.device_name||dev.label||'Linked Device'):'No device linked';
 
-  // Debug: show what IDs we're matching against
-  const driverOrders = getDriverOrders(d);
-  const sampleDriverIds = [...new Set(allOrders.slice(0,5).map(o=>o.driver_id).filter(Boolean))];
-  console.log('[debug] driver.id:', d.id);
-  console.log('[debug] driver.device_link_id:', d.device_link_id);
-  console.log('[debug] sample order driver_ids:', sampleDriverIds);
-  console.log('[debug] matched orders:', driverOrders.length);
+  console.log('[web-debug] openDetail driver:', {
+    id: d.id,
+    profile_id: d.profile_id,
+    device_link_id: d.device_link_id,
+    full_name: d.full_name
+  });
+  console.log('[web-debug] allOrders count:', allOrders.length);
   document.getElementById('detail-overlay').classList.add('open');
   switchTab('profile',document.querySelector('.tab-btn'));
   renderDriverZonesPanel(d.id);
