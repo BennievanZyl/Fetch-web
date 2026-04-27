@@ -219,7 +219,24 @@ function whatsappLink(phone, code, ownerName, storeName) {
       } else { otbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:#8E8E8E">No orders yet</td></tr>'; }
     } catch(e) { console.error(e); }
   }
+  // ── Live update helpers ─────────────────────────────────────
+  let _pollTimer=null;
+  function startPolling(ms=30000){
+    if(_pollTimer)clearInterval(_pollTimer);
+    _pollTimer=setInterval(()=>{
+      console.log('[dashboard] polling refresh');
+      loadDashboard();
+    },ms);
+  }
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible'){
+      console.log('[dashboard] tab visible — refreshing');
+      loadDashboard();
+    }
+  });
+
   loadDashboard();
+  startPolling(30000);
 </script>
 </body>
 </html>
