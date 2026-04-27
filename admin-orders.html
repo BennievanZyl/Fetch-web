@@ -249,7 +249,34 @@ function whatsappLink(phone, code, ownerName, storeName) {
       ${order.payment_reference?`<div style="font-size:12px;color:#8E8E8E">Payment ref: ${order.payment_reference}</div>`:''}
     `);
   }
+  // ── Live update helpers ─────────────────────────────────────
+  const _rtCallbacks=[];const _pollCallbacks=[];let _pollTimer=null;
+  function onRealtimeChange(cb){_rtCallbacks.push(cb);}
+  function onPoll(cb){_pollCallbacks.push(cb);}
+  function startPolling(ms=30000){if(_pollTimer)clearInterval(_pollTimer);_pollTimer=setInterval(()=>{_pollCallbacks.forEach(cb=>{try{cb();}catch(e){}});},ms);}
+  // Visibility — refresh when tab becomes active
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){_pollCallbacks.forEach(cb=>{try{cb();}catch(e){}});}});
+  // Simple Supabase Realtime WebSocket
+  (function connectRT(){
+    const ws=new WebSocket(`${SUPABASE_URL.replace('https://','wss://')}/realtime/v1/websocket?apikey=${SUPABASE_KEY}&vsn=1.0.0`);
+    ws.onopen=()=>{ws.send(JSON.stringify({topic:'realtime:public:orders',event:'phx_join',payload:{user_token:getToken()||SUPABASE_KEY},ref:'1'}));setInterval(()=>{if(ws.readyState===1)ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:'hb'}));},30000);};
+    ws.onmessage=e=>{try{const m=JSON.parse(e.data);if(['INSERT','UPDATE','DELETE'].includes(m.event)){_rtCallbacks.forEach(cb=>{try{cb('orders',m.event,m.payload?.record);}catch(e){}});}}catch(e){}};
+    ws.onclose=()=>setTimeout(connectRT,5000);
+  })();
+
   loadOrders();
+
+  // Live updates — reload orders on any order change
+  onRealtimeChange((table, event) => {
+    if (table === 'orders') {
+      console.log('[orders] realtime change — reloading');
+      loadOrders();
+    }
+  });
+
+  // Polling fallback — refresh every 30 seconds
+  onPoll(loadOrders);
+  startPolling(30000);
 </script>
 </body>
 </html>
