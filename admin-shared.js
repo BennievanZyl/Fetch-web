@@ -185,131 +185,34 @@ async function checkConnection() {
   }
 }
 
-// ── Supabase Realtime via WebSocket ──────────────────────────
-// Connects to Supabase Realtime and listens for table changes
-// Calls callback(table, eventType, record) on any change
-let realtimeSocket = null;
-let realtimeCallbacks = [];
-let realtimeReconnectTimer = null;
-let realtimeHeartbeat = null;
+// ── Auto-polling and visibility helpers ──────────────────────
+// Use these in each page for live data updates
 
-function onRealtimeChange(callback) {
-  realtimeCallbacks.push(callback);
-}
-
-function connectRealtime() {
-  if (realtimeSocket && realtimeSocket.readyState === WebSocket.OPEN) return;
-
-  const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + '/realtime/v1/websocket?apikey=' + SUPABASE_KEY + '&vsn=1.0.0';
-
-  try {
-    realtimeSocket = new WebSocket(wsUrl);
-
-    realtimeSocket.onopen = () => {
-      console.log('[realtime] connected ✓');
-      // Remove any lost connection banner
-      const b = document.getElementById('realtime-banner');
-      if (b) b.remove();
-
-      // Join the orders channel
-      realtimeSocket.send(JSON.stringify({
-        topic: 'realtime:public:orders',
-        event: 'phx_join',
-        payload: { user_token: getToken() || SUPABASE_KEY },
-        ref: '1'
-      }));
-
-      // Heartbeat every 30 seconds to keep connection alive
-      if (realtimeHeartbeat) clearInterval(realtimeHeartbeat);
-      realtimeHeartbeat = setInterval(() => {
-        if (realtimeSocket.readyState === WebSocket.OPEN) {
-          realtimeSocket.send(JSON.stringify({
-            topic: 'phoenix',
-            event: 'heartbeat',
-            payload: {},
-            ref: Date.now().toString()
-          }));
-        }
-      }, 30000);
-    };
-
-    realtimeSocket.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        if (msg.event === 'INSERT' || msg.event === 'UPDATE' || msg.event === 'DELETE') {
-          const table = msg.topic.split(':')[2] || 'orders';
-          console.log('[realtime] change:', msg.event, table);
-          realtimeCallbacks.forEach(cb => {
-            try { cb(table, msg.event, msg.payload?.record); } catch(e) {}
-          });
-        }
-      } catch(e) {}
-    };
-
-    realtimeSocket.onclose = (e) => {
-      console.warn('[realtime] disconnected — reconnecting in 5s...');
-      if (realtimeHeartbeat) clearInterval(realtimeHeartbeat);
-      showRealtimeBanner();
-      // Reconnect after 5 seconds
-      if (realtimeReconnectTimer) clearTimeout(realtimeReconnectTimer);
-      realtimeReconnectTimer = setTimeout(connectRealtime, 5000);
-    };
-
-    realtimeSocket.onerror = () => {
-      console.warn('[realtime] connection error');
-    };
-
-  } catch(e) {
-    console.warn('[realtime] failed to connect:', e);
-  }
-}
-
-function showRealtimeBanner() {
-  if (document.getElementById('realtime-banner')) return;
-  const banner = document.createElement('div');
-  banner.id = 'realtime-banner';
-  banner.style.cssText = `
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: #F39C12; color: #fff; padding: 10px 20px;
-    border-radius: 10px; font-size: 13px; font-weight: 600;
-    z-index: 9998; display: flex; align-items: center; gap: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  `;
-  banner.innerHTML = '⚡ Reconnecting live updates...';
-  document.body.appendChild(banner);
-}
-
-// ── Auto-polling fallback (every 30 seconds) ──────────────────
-// If realtime is not working, poll as a fallback
-let pollingCallbacks = [];
-let pollingTimer = null;
-
-function onPoll(callback) {
-  pollingCallbacks.push(callback);
-}
-
-function startPolling(intervalMs = 30000) {
-  if (pollingTimer) clearInterval(pollingTimer);
-  pollingTimer = setInterval(() => {
-    console.log('[poll] refreshing data...');
-    pollingCallbacks.forEach(cb => { try { cb(); } catch(e) {} });
+function makePoller(loadFn, intervalMs = 30000) {
+  // Poll every N seconds
+  const timer = setInterval(() => {
+    console.log('[poll] refreshing...');
+    loadFn();
   }, intervalMs);
-}
 
-// ── Page visibility — refresh when tab becomes visible ────────
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    console.log('[admin] tab visible — refreshing data');
-    // Refresh token
-    refreshAdminToken();
-    // Reconnect realtime if needed
-    if (!realtimeSocket || realtimeSocket.readyState !== WebSocket.OPEN) {
-      connectRealtime();
+  // Refresh immediately when tab becomes visible
+  const onVisible = () => {
+    if (document.visibilityState === 'visible') {
+      console.log('[admin] tab visible — refreshing');
+      // Refresh token silently
+      refreshAdminToken();
+      // Reload data
+      loadFn();
     }
-    // Trigger all poll callbacks immediately
-    pollingCallbacks.forEach(cb => { try { cb(); } catch(e) {} });
-  }
-});
+  };
+  document.addEventListener('visibilitychange', onVisible);
+
+  // Return cleanup function
+  return () => {
+    clearInterval(timer);
+    document.removeEventListener('visibilitychange', onVisible);
+  };
+}
 
 // ── Admin auth ───────────────────────────────────────────────
 function guardAdmin() {
@@ -321,8 +224,6 @@ function guardAdmin() {
   startTokenRefresh();
   // Check connection every 5 minutes
   setInterval(checkConnection, 5 * 60 * 1000);
-  // Connect realtime WebSocket
-  connectRealtime();
   return true;
 }
 
