@@ -195,14 +195,22 @@ async function loadMenu(){
       </div>`;
     return;
   }
+  // Fetch ALL option groups for ALL products in a single request, then group in JS.
+  // Previously this was one request per product (N serial calls) — very slow with many items.
+  const productIds=products.map(p=>p.id);
+  const allGroups=await get('product_option_groups','?product_id=in.('+productIds.join(',')+')&order=sort_order&select=*,options:product_options(*)');
+  const groupsByProduct={};
+  for(const g of (Array.isArray(allGroups)?allGroups:[])){
+    if(!groupsByProduct[g.product_id])groupsByProduct[g.product_id]=[];
+    groupsByProduct[g.product_id].push(g);
+  }
   const categories=[...new Set(products.map(p=>p.category||'General'))];
   let html='';
   for(const cat of categories){
     const catProducts=products.filter(p=>(p.category||'General')===cat);
     html+=`<div style="margin-bottom:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#8E8E8E;text-transform:uppercase;letter-spacing:0.8px">${cat} (${catProducts.length})</div>`;
     for(const p of catProducts){
-      const groups=await get('product_option_groups','?product_id=eq.'+p.id+'&order=sort_order&select=*,options:product_options(*)');
-      html+=buildProductCard(p,Array.isArray(groups)?groups:[]);
+      html+=buildProductCard(p,groupsByProduct[p.id]||[]);
     }
   }
   area.innerHTML=html;
@@ -238,6 +246,7 @@ function buildProductCard(p,groups){
   return`
     <div class="product-card">
       <div class="product-header" onclick="toggleProduct('prod-${p.id}')">
+        ${p.image_url?`<img src="${p.image_url}" alt="${p.name}" style="width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;margin-right:12px" onerror="this.style.display='none'">`:''}
         <div style="flex:1">
           <div class="product-name">${p.name} ${p.is_featured?'⭐':''}</div>
           <div class="product-meta">${p.category||'General'} · ${p.prep_time_minutes||15}min prep · ${p.is_available?'<span style="color:#0a7a45">Available</span>':'<span style="color:#E74C3C">Unavailable</span>'}</div>
