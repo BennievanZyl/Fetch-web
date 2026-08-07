@@ -92,6 +92,8 @@ input:focus,textarea:focus,select:focus{border-color:var(--green);}
 .avail-toggle{width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
 .success-toast{position:fixed;bottom:24px;right:24px;background:var(--black);color:var(--white);padding:14px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;display:none;align-items:center;gap:8px;}
 .success-toast.show{display:flex;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle;margin-right:6px}
 @media(max-width:900px){.sidebar{display:none;}.main{margin-left:0;}.content{grid-template-columns:1fr;}.topbar{padding:16px;}.content{padding:16px;}}
 </style>
 </head>
@@ -436,72 +438,79 @@ function renderOptionRows(){
 }
 function addOptionRow(){optionRows.push({name:'',price:0});renderOptionRows();}
 function removeOptionRow(i){if(optionRows.length>1){optionRows.splice(i,1);renderOptionRows();}}
+let _saving=false;
 async function saveGroup(){
+  // Guard against double-click — if already saving, ignore the second tap
+  if(_saving)return;
+  // Validate before locking the button
   const name=document.getElementById('g-name').value.trim();
   if(!name){alert('Please enter a group name.');return;}
   const validOptions=optionRows.filter(o=>o.name.trim());
   if(!validOptions.length){alert('Please add at least one option.');return;}
-  const groupBody={
-    product_id:editingGroupProductId,
-    name,
-    description:document.getElementById('g-desc').value||null,
-    is_required:document.getElementById('g-required').checked,
-    max_selections:parseInt(document.getElementById('g-maxsel').value)||1,
-    min_selections:document.getElementById('g-required').checked?1:0,
-  };
-  let groupId=editingGroupId;
-  if(groupId){
-    await patch('product_option_groups',groupId,groupBody);
-    // Remove options that were deleted from the editor.
-    // First delete any order_item_options referencing this option (clears FK),
-    // then hard-delete the option itself. No soft-delete fallback needed.
-    const keptIds=new Set(optionRows.filter(o=>o.id).map(o=>o.id));
-    for(const id of originalOptionIds){
-      if(!keptIds.has(id)){
-        await fetch(SB+'/rest/v1/order_item_options?option_id=eq.'+id,{method:'DELETE',headers:hdrs()});
-        await fetch(SB+'/rest/v1/product_options?id=eq.'+id,{method:'DELETE',headers:hdrs()});
-      }
-    }
-  } else {
-    const res=await post('product_option_groups',groupBody);
-    const newGroup=Array.isArray(res)?res[0]:res;
-    if(!newGroup||!newGroup.id){alert('Failed to create group');return;}
-    groupId=newGroup.id;
-  }
-  // Update existing options or insert new ones
-  for(let i=0;i<validOptions.length;i++){
-    const o=validOptions[i];
-    if(o.id){
-      // Update existing option
-      await fetch(SB+'/rest/v1/product_options?id=eq.'+o.id,{
-        method:'PATCH',
-        headers:hdrs({'Prefer':'return=representation'}),
-        body:JSON.stringify({name:o.name.trim(),price_modifier:parseFloat(o.price)||0,sort_order:i,is_available:true})
-      });
+  // Lock + show spinner
+  _saving=true;
+  const btn=document.querySelector('#modal-box button.btn-black');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>Saving…';}
+  try{
+    const groupBody={
+      product_id:editingGroupProductId,
+      name,
+      description:document.getElementById('g-desc').value||null,
+      is_required:document.getElementById('g-required').checked,
+      max_selections:parseInt(document.getElementById('g-maxsel').value)||1,
+      min_selections:document.getElementById('g-required').checked?1:0,
+    };
+    let groupId=editingGroupId;
+    if(groupId){
+      await patch('product_option_groups',groupId,groupBody);
+      // Parallel: clear FK refs then hard-delete removed options all at once
+      const keptIds=new Set(optionRows.filter(o=>o.id).map(o=>o.id));
+      const idsToDelete=originalOptionIds.filter(id=>!keptIds.has(id));
+      await Promise.all(idsToDelete.map(id=>
+        fetch(SB+'/rest/v1/order_item_options?option_id=eq.'+id,{method:'DELETE',headers:hdrs()})
+          .then(()=>fetch(SB+'/rest/v1/product_options?id=eq.'+id,{method:'DELETE',headers:hdrs()}))
+      ));
     } else {
-      // Insert new option
-      await post('product_options',{
-        group_id:groupId,
-        name:o.name.trim(),
-        price_modifier:parseFloat(o.price)||0,
-        is_available:true,
-        sort_order:i,
-      });
+      const res=await post('product_option_groups',groupBody);
+      const newGroup=Array.isArray(res)?res[0]:res;
+      if(!newGroup||!newGroup.id){alert('Failed to create group');return;}
+      groupId=newGroup.id;
     }
+    // Parallel: update existing options AND insert new ones simultaneously
+    await Promise.all(validOptions.map((o,i)=>{
+      if(o.id){
+        return fetch(SB+'/rest/v1/product_options?id=eq.'+o.id,{
+          method:'PATCH',
+          headers:hdrs({'Prefer':'return=representation'}),
+          body:JSON.stringify({name:o.name.trim(),price_modifier:parseFloat(o.price)||0,sort_order:i,is_available:true})
+        });
+      } else {
+        return post('product_options',{
+          group_id:groupId,
+          name:o.name.trim(),
+          price_modifier:parseFloat(o.price)||0,
+          is_available:true,
+          sort_order:i,
+        });
+      }
+    }));
+    closeModal();
+    toast(editingGroupId?'Option group updated!':'Option group added!');
+    loadMenu();
+  } finally {
+    _saving=false;
+    const b=document.querySelector('#modal-box button.btn-black');
+    if(b){b.disabled=false;b.innerHTML='Save Group';}
   }
-  closeModal();
-  toast(editingGroupId?'Option group updated!':'Option group added!');
-  loadMenu();
 }
 async function deleteGroup(groupId){
   if(!confirm('Delete this option group and all its options?'))return;
-  // Fetch all options for this group, delete order_item_options refs first (clears FK),
-  // then hard-delete each option and finally the group itself.
+  // Fetch all options, then parallel: clear FK refs + hard-delete each option
   const opts=await get('product_options','?group_id=eq.'+groupId+'&select=id');
-  for(const o of (Array.isArray(opts)?opts:[])){
-    await fetch(SB+'/rest/v1/order_item_options?option_id=eq.'+o.id,{method:'DELETE',headers:hdrs()});
-    await fetch(SB+'/rest/v1/product_options?id=eq.'+o.id,{method:'DELETE',headers:hdrs()});
-  }
+  await Promise.all((Array.isArray(opts)?opts:[]).map(o=>
+    fetch(SB+'/rest/v1/order_item_options?option_id=eq.'+o.id,{method:'DELETE',headers:hdrs()})
+      .then(()=>fetch(SB+'/rest/v1/product_options?id=eq.'+o.id,{method:'DELETE',headers:hdrs()}))
+  ));
   await del('product_option_groups',groupId);
   toast('Option group deleted');
   loadMenu();
