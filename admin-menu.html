@@ -157,6 +157,34 @@ async function post(table,body){const r=await fetch(SB+'/rest/v1/'+table,{method
 async function patch(table,id,body){const r=await fetch(SB+'/rest/v1/'+table+'?id=eq.'+id,{method:'PATCH',headers:hdrs({'Prefer':'return=representation'}),body:JSON.stringify(body)});return r.json();}
 async function del(table,id){await fetch(SB+'/rest/v1/'+table+'?id=eq.'+id,{method:'DELETE',headers:hdrs()});}
 function toast(msg){const t=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+async function uploadProductImage(file){
+  const ext=file.name.split('.').pop();
+  const path='products/'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext;
+  const res=await fetch(SB+'/storage/v1/object/product-images/'+path,{
+    method:'POST',
+    headers:{'apikey':KEY,'Authorization':'Bearer '+(tok()||KEY),'Content-Type':file.type,'x-upsert':'true'},
+    body:file
+  });
+  if(!res.ok){const e=await res.text();throw new Error('Upload failed: '+e);}
+  return SB+'/storage/v1/object/public/product-images/'+path;
+}
+async function handleImagePick(inputEl){
+  const file=inputEl.files[0];
+  if(!file)return;
+  const btn=document.getElementById('img-upload-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>Uploading…';}
+  try{
+    const url=await uploadProductImage(file);
+    document.getElementById('p-img').value=url;
+    const preview=document.getElementById('img-preview');
+    if(preview){preview.src=url;preview.style.display='block';}
+    toast('Image uploaded!');
+  }catch(e){
+    alert(e.message);
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML='📁 Upload Photo';}
+  }
+}
 function showModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal').classList.add('open');}
 function closeModal(){document.getElementById('modal').classList.remove('open');}
 function fmtZAR(n){return'R'+parseFloat(n||0).toFixed(2);}
@@ -285,9 +313,17 @@ function openAddProduct(){
         <div><label class="form-label">Price (ZAR) *</label><input type="number" id="p-price" placeholder="0.00" step="0.01"></div>
         <div><label class="form-label">Category</label><input type="text" id="p-cat" placeholder="e.g. Burgers"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><label class="form-label">Prep Time (min)</label><input type="number" id="p-prep" value="15"></div>
-        <div><label class="form-label">Image URL</label><input type="text" id="p-img" placeholder="https://..."></div>
+      <div><label class="form-label">Prep Time (min)</label><input type="number" id="p-prep" value="15"></div>
+      <div>
+        <label class="form-label">Product Photo</label>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <img id="img-preview" src="" style="display:none;width:60px;height:60px;border-radius:10px;object-fit:cover;border:1px solid var(--border)">
+          <div style="flex:1">
+            <input type="file" id="img-file" accept="image/*" style="display:none" onchange="handleImagePick(this)">
+            <button id="img-upload-btn" class="btn btn-grey" style="width:100%;margin-bottom:6px" onclick="document.getElementById('img-file').click()">📁 Upload Photo</button>
+            <input type="text" id="p-img" placeholder="Or paste image URL…" style="font-size:12px;padding:8px 10px">
+          </div>
+        </div>
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Available for order</span>
@@ -315,9 +351,17 @@ function editProduct(p){
         <div><label class="form-label">Price (ZAR) *</label><input type="number" id="p-price" value="${p.price}" step="0.01"></div>
         <div><label class="form-label">Category</label><input type="text" id="p-cat" value="${p.category||''}"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><label class="form-label">Prep Time (min)</label><input type="number" id="p-prep" value="${p.prep_time_minutes||15}"></div>
-        <div><label class="form-label">Image URL</label><input type="text" id="p-img" value="${p.image_url||''}"></div>
+      <div><label class="form-label">Prep Time (min)</label><input type="number" id="p-prep" value="${p.prep_time_minutes||15}"></div>
+      <div>
+        <label class="form-label">Product Photo</label>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <img id="img-preview" src="${p.image_url||''}" style="display:${p.image_url?'block':'none'};width:60px;height:60px;border-radius:10px;object-fit:cover;border:1px solid var(--border)">
+          <div style="flex:1">
+            <input type="file" id="img-file" accept="image/*" style="display:none" onchange="handleImagePick(this)">
+            <button id="img-upload-btn" class="btn btn-grey" style="width:100%;margin-bottom:6px" onclick="document.getElementById('img-file').click()">📁 Upload Photo</button>
+            <input type="text" id="p-img" value="${p.image_url||''}" placeholder="Or paste image URL…" style="font-size:12px;padding:8px 10px">
+          </div>
+        </div>
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Available for order</span>
