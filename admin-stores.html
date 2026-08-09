@@ -45,9 +45,22 @@ tbody td{padding:14px 16px;font-size:14px;color:var(--black);vertical-align:midd
 .search-input:focus{border-color:var(--green);}
 .badge{display:inline-flex;align-items:center;justify-content:center;background:var(--green);color:var(--white);border-radius:999px;font-size:11px;font-weight:700;min-width:20px;height:20px;padding:0 6px;margin-left:6px;}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;}
-.modal-box{background:#fff;border-radius:20px;padding:40px;max-width:520px;width:100%;position:relative;max-height:90vh;overflow-y:auto;}
+.modal-box{background:#fff;border-radius:20px;padding:40px;max-width:560px;width:100%;position:relative;max-height:90vh;overflow-y:auto;}
 .modal-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:900;margin-bottom:6px;}
 .modal-sub{font-size:14px;color:var(--muted);margin-bottom:24px;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--black);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+.form-group input,.form-group select{width:100%;padding:12px 14px;border-radius:10px;background:var(--surface);border:1.5px solid var(--border);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--black);outline:none;}
+.form-group input:focus,.form-group select:focus{border-color:var(--green);}
+.form-section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;padding:16px 0 10px;border-top:1px solid var(--border);margin-top:8px;display:block;}
+.form-section-title:first-child{padding-top:0;border-top:none;margin-top:0;}
+.seg-control{display:flex;gap:0;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;}
+.seg-btn{flex:1;padding:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;background:var(--white);color:var(--muted);transition:all 0.15s;text-align:center;}
+.seg-btn.active{background:var(--black);color:var(--white);}
+.seg-btn:not(:last-child){border-right:1.5px solid var(--border);}
+.help-text{font-size:12px;color:var(--muted);margin-top:4px;}
+.toast{position:fixed;bottom:24px;right:24px;background:#000;color:#fff;padding:14px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;display:none;align-items:center;gap:8px;}
+.toast.show{display:flex;}
 @media(max-width:900px){.sidebar{display:none;}.main{margin-left:0;}.stats-grid{grid-template-columns:1fr 1fr;}.content{padding:16px;}}
 </style>
 </head>
@@ -84,9 +97,9 @@ tbody td{padding:14px 16px;font-size:14px;color:var(--black);vertical-align:midd
     </div>
     <div class="table-card">
       <table>
-        <thead><tr><th>Store Name</th><th>Address</th><th>Status</th><th>Delivery Fee</th><th>Created</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Store Name</th><th>Address</th><th>Status</th><th>Delivery Fee</th><th>Markup</th><th>Driver Pay</th><th>Created</th><th>Actions</th></tr></thead>
         <tbody id="stores-tbody">
-          <tr><td colspan="6" style="text-align:center;padding:40px;color:#8E8E8E">Loading stores...</td></tr>
+          <tr><td colspan="8" style="text-align:center;padding:40px;color:#8E8E8E">Loading stores...</td></tr>
         </tbody>
       </table>
     </div>
@@ -96,6 +109,8 @@ tbody td{padding:14px 16px;font-size:14px;color:var(--black);vertical-align:midd
 <div id="modal-overlay" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal()">
   <div class="modal-box" id="modal-box"></div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 const SUPABASE_URL = 'https://errbnpeswpjmdsvehduz.supabase.co';
@@ -114,10 +129,17 @@ function hdrs(){
 
 if(!getToken()){ window.location.href='/admin'; }
 
+function toast(msg, err=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background=err?'#E74C3C':'#000';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
 async function query(table, params){
   const res = await fetch(SUPABASE_URL+'/rest/v1/'+table+(params||''), { headers: hdrs() });
   const data = await res.json();
-  console.log(table, res.status, data);
   return data;
 }
 
@@ -144,13 +166,13 @@ let allStores = [];
 
 async function loadStores(){
   const tbody = document.getElementById('stores-tbody');
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#8E8E8E">Loading...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#8E8E8E">Loading...</td></tr>';
   
   try {
     const data = await query('stores','?order=created_at.desc&select=*');
     
     if(!Array.isArray(data)){
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#E74C3C">Error loading stores: '+JSON.stringify(data)+'</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#E74C3C">Error loading stores: '+JSON.stringify(data)+'</td></tr>';
       return;
     }
     
@@ -163,7 +185,7 @@ async function loadStores(){
     document.getElementById('s-paused').textContent = allStores.filter(s=>s.status==='paused'||s.status==='suspended').length;
     renderStores(allStores);
   } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#E74C3C">Exception: '+e.message+'</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#E74C3C">Exception: '+e.message+'</td></tr>';
   }
 }
 
@@ -174,23 +196,36 @@ function filterStores(q){
 function renderStores(data){
   const tbody = document.getElementById('stores-tbody');
   if(!data.length){
-    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:48px;color:#8E8E8E"><div style="font-size:32px;margin-bottom:12px">🏪</div>No stores found</td></tr>';
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:48px;color:#8E8E8E"><div style="font-size:32px;margin-bottom:12px">🏪</div>No stores found</td></tr>';
     return;
   }
-  tbody.innerHTML = data.map(s=>'<tr>'+
-    '<td><strong>'+s.name+'</strong>'+(s.description?'<div style="font-size:12px;color:#8E8E8E;margin-top:2px">'+s.description.slice(0,50)+'...</div>':'')+'</td>'+
-    '<td class="td-muted">'+(s.address||'—')+'</td>'+
-    '<td>'+statusPill(s.status||'onboarding')+'</td>'+
-    '<td>'+(s.delivery_fee==0?'<span style="color:#06C167;font-weight:700">Free</span>':formatZAR(s.delivery_fee))+'</td>'+
-    '<td class="td-muted">'+formatDate(s.created_at)+'</td>'+
-    '<td><div style="display:flex;gap:6px;flex-wrap:wrap">'+
-      (s.status!=='active'?'<button class="btn btn-green btn-sm" onclick="activateStore(\''+s.id+'\')">▶ Activate</button>':'')+
-      (s.status==='active'?'<button class="btn btn-grey btn-sm" onclick="pauseStore(\''+s.id+'\')">⏸ Pause</button>':'')+
-      (s.status!=='suspended'?'<button class="btn btn-red btn-sm" onclick="suspendStore(\''+s.id+'\',\''+s.name+'\')">🚫 Suspend</button>':'')+
-      (s.status==='suspended'?'<button class="btn btn-green btn-sm" onclick="activateStore(\''+s.id+'\')">↩ Reinstate</button>':'')+
-      '<button class="btn btn-grey btn-sm" onclick="viewProducts(\''+s.id+'\',\''+s.name+'\')">🍽️ Menu</button>'+
-    '</div></td>'+
-  '</tr>').join('');
+  tbody.innerHTML = data.map(s=>{
+    const markup = parseFloat(s.delivery_markup_percent||0);
+    const markupCell = markup > 0
+      ? `<span style="background:#E6F9F0;color:#0A7A45;padding:3px 8px;border-radius:6px;font-size:12px;font-weight:700">+${markup}%</span>`
+      : `<span style="color:var(--muted);font-size:12px">None</span>`;
+    const driverModel = s.driver_payment_model || 'commission';
+    const driverCell = driverModel === 'fixed_delivery_fee'
+      ? `<span style="background:#E6F0FB;color:#1A5FA5;padding:3px 8px;border-radius:6px;font-size:12px;font-weight:700">Fixed fee</span>`
+      : `<span style="background:#F7F7F7;color:#8E8E8E;padding:3px 8px;border-radius:6px;font-size:12px;font-weight:700">Commission</span>`;
+    return '<tr>'+
+      '<td><strong>'+s.name+'</strong>'+(s.description?'<div style="font-size:12px;color:#8E8E8E;margin-top:2px">'+s.description.slice(0,50)+'...</div>':'')+'</td>'+
+      '<td class="td-muted">'+(s.address||'—')+'</td>'+
+      '<td>'+statusPill(s.status||'onboarding')+'</td>'+
+      '<td>'+(s.delivery_fee==0?'<span style="color:#06C167;font-weight:700">Free</span>':formatZAR(s.delivery_fee))+'</td>'+
+      '<td>'+markupCell+'</td>'+
+      '<td>'+driverCell+'</td>'+
+      '<td class="td-muted">'+formatDate(s.created_at)+'</td>'+
+      '<td><div style="display:flex;gap:6px;flex-wrap:wrap">'+
+        (s.status!=='active'?'<button class="btn btn-green btn-sm" onclick="activateStore(\''+s.id+'\')">▶ Activate</button>':'')+
+        (s.status==='active'?'<button class="btn btn-grey btn-sm" onclick="pauseStore(\''+s.id+'\')">⏸ Pause</button>':'')+
+        (s.status!=='suspended'?'<button class="btn btn-red btn-sm" onclick="suspendStore(\''+s.id+'\',\''+s.name+'\')">🚫 Suspend</button>':'')+
+        (s.status==='suspended'?'<button class="btn btn-green btn-sm" onclick="activateStore(\''+s.id+'\')">↩ Reinstate</button>':'')+
+        '<button class="btn btn-grey btn-sm" onclick="editSettings(\''+s.id+'\')">⚙️ Settings</button>'+
+        '<button class="btn btn-grey btn-sm" onclick="viewProducts(\''+s.id+'\',\''+s.name+'\')">🍽️ Menu</button>'+
+      '</div></td>'+
+    '</tr>';
+  }).join('');
 }
 
 async function activateStore(id){ await patch('stores',id,{is_active:true,status:'active',activated_at:new Date().toISOString()}); loadStores(); }
@@ -198,6 +233,73 @@ async function pauseStore(id){ await patch('stores',id,{is_active:false,status:'
 async function suspendStore(id,name){
   if(!confirm('Suspend '+name+'?')) return;
   await patch('stores',id,{is_active:false,status:'suspended',suspended_at:new Date().toISOString()}); loadStores();
+}
+
+// ── Store Settings Modal ──────────────────────────────────────
+let editingStoreId = null;
+let currentDriverModel = 'commission';
+
+function editSettings(id) {
+  const s = allStores.find(x=>x.id===id);
+  if (!s) return;
+  editingStoreId = id;
+  currentDriverModel = s.driver_payment_model || 'commission';
+  showModal(`
+    <div class="modal-title">⚙️ Store Settings</div>
+    <div class="modal-sub">${s.name}</div>
+
+    <span class="form-section-title">Delivery Price Markup</span>
+    <div class="form-group">
+      <label>Delivery Markup %</label>
+      <input type="number" id="set-markup" value="${parseFloat(s.delivery_markup_percent||0)}" min="0" max="100" step="0.5" placeholder="0">
+      <div class="help-text">When set above 0%, item prices shown to customers will be increased by this % for delivery orders. Pickup orders always use normal prices.</div>
+    </div>
+
+    <span class="form-section-title">Driver Payment Model</span>
+    <div class="form-group">
+      <label>How are drivers paid?</label>
+      <div class="seg-control">
+        <div class="seg-btn ${currentDriverModel==='commission'?'active':''}" onclick="setDriverModel('commission',this)">Commission %</div>
+        <div class="seg-btn ${currentDriverModel==='fixed_delivery_fee'?'active':''}" onclick="setDriverModel('fixed_delivery_fee',this)">Fixed delivery fee</div>
+      </div>
+      <div class="help-text" id="model-help-text">${currentDriverModel==='commission'
+        ? 'Driver earns a % of each order total based on their commission rate.'
+        : 'Driver earns the delivery fee amount charged to the customer per order (e.g. R30).'
+      }</div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:24px">
+      <button class="btn btn-grey" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-black" style="flex:2;padding:14px" onclick="saveSettings()">Save Settings</button>
+    </div>
+  `);
+}
+
+function setDriverModel(model, btn) {
+  currentDriverModel = model;
+  document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('model-help-text').textContent = model === 'commission'
+    ? 'Driver earns a % of each order total based on their commission rate.'
+    : 'Driver earns the delivery fee amount charged to the customer per order (e.g. R30).';
+}
+
+async function saveSettings() {
+  const markup = parseFloat(document.getElementById('set-markup').value) || 0;
+  const btn = document.querySelector('#modal-box .btn-black');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+  try {
+    await patch('stores', editingStoreId, {
+      delivery_markup_percent: markup,
+      driver_payment_model: currentDriverModel
+    });
+    toast('Settings saved ✓');
+    closeModal();
+    loadStores();
+  } catch(e) {
+    toast('Save failed: ' + e.message, true);
+  }
+  btn.textContent = 'Save Settings'; btn.disabled = false;
 }
 
 async function viewProducts(storeId,storeName){
