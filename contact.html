@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Us | Fetch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: #ffffff; color: #1a1a1a; line-height: 1.6; }
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 48px; height: 72px;
+    background: rgba(255,255,255,0.92);
+    border-bottom: 1px solid #E8E8E8;
+  }
+  .nav-logo { font-family: 'Syne', sans-serif; font-weight: 900; font-size: 24px; letter-spacing: -1px; color: #000; text-decoration: none; }
+  .nav-logo span { color: #06C167; }
+  .container { max-width: 720px; margin: 0 auto; padding: 60px 24px 100px; }
+  .logo { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 900; color: #111; margin-bottom: 8px; }
+  .logo span { color: #06C167; }
+  h1 { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 900; letter-spacing: -1px; margin-bottom: 12px; }
+  .subtitle { font-size: 17px; color: #6b7280; margin-bottom: 48px; line-height: 1.6; }
+  .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 48px; }
+  .contact-card {
+    background: #F7F7F7; border-radius: 16px; padding: 24px;
+    text-decoration: none; color: #000; transition: all 0.2s;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .contact-card:hover { background: #000; color: #fff; }
+  .contact-card:hover .contact-icon { background: rgba(6,193,103,0.2); }
+  .contact-card:hover .contact-label { color: rgba(255,255,255,0.6); }
+  .contact-icon { font-size: 28px; margin-bottom: 4px; }
+  .contact-type { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+  .contact-label { font-size: 13px; color: #6b7280; }
+  .contact-value { font-size: 15px; font-weight: 600; color: #06C167; }
+  .faq-section { margin-top: 48px; }
+  .faq-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 900; margin-bottom: 24px; }
+  .faq-item { border-bottom: 1px solid #E8E8E8; padding: 16px 0; cursor: pointer; }
+  .faq-question { font-size: 16px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+  .faq-answer { font-size: 15px; color: #6b7280; margin-top: 12px; display: none; line-height: 1.6; }
+  .faq-answer.open { display: block; }
+  .faq-arrow { transition: transform 0.2s; font-size: 12px; }
+  .faq-arrow.open { transform: rotate(180deg); }
+  footer {
+    background: #000; padding: 32px 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .footer-logo { font-family: 'Syne', sans-serif; font-weight: 900; font-size: 18px; color: #fff; }
+  .footer-logo span { color: #06C167; }
+  .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+  .footer-links a { font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: none; }
+  .footer-links a:hover { color: #fff; }
+  .footer-copy { font-size: 13px; color: rgba(255,255,255,0.4); }
+  @media (max-width: 600px) {
+    nav { padding: 0 20px; }
+    .contact-grid { grid-template-columns: 1fr; }
+    footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">FETCH<span>.</span></a>
+</nav>
+
+<div class="container">
+  <div class="logo">Fetch<span>.</span></div>
+  <h1>Contact Us</h1>
+  <p class="subtitle">We're here to help. Reach out via email or WhatsApp and we'll get back to you as soon as possible.</p>
+
+  <div class="contact-grid">
+    <a href="mailto:support@fetch-sa.co.za" class="contact-card">
+      <div class="contact-icon">✉️</div>
+      <div class="contact-type">Email Support</div>
+      <div class="contact-label">Send us a message</div>
+      <div class="contact-value">support@fetch-sa.co.za</div>
+    </a>
+    <a href="https://wa.me/27824900489" class="contact-card" target="_blank">
+      <div class="contact-icon">💬</div>
+      <div class="contact-type">WhatsApp</div>
+      <div class="contact-label">Chat with us directly</div>
+      <div class="contact-value">WhatsApp Support</div>
+    </a>
+    <a href="https://fetch-sa.co.za" class="contact-card">
+      <div class="contact-icon">🌍</div>
+      <div class="contact-type">Website</div>
+      <div class="contact-label">Visit our site</div>
+      <div class="contact-value">fetch-sa.co.za</div>
+    </a>
+    <div class="contact-card">
+      <div class="contact-icon">📍</div>
+      <div class="contact-type">Location</div>
+      <div class="contact-label">Based in</div>
+      <div class="contact-value">Hartswater, Northern Cape</div>
+    </div>
+  </div>
+
+  <div class="faq-section">
+    <div class="faq-title">Frequently Asked Questions</div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-question">How do I track my order? <span class="faq-arrow">▼</span></div>
+      <div class="faq-answer">Once your order is confirmed, open the Fetch app and tap on your active order. You'll see live status updates and a map showing your driver's progress.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-question">Which areas do you deliver to? <span class="faq-arrow">▼</span></div>
+      <div class="faq-answer">We currently deliver to Hartswater, Jan Kempdorp, Pampierstad, and Magogong. We're working on expanding to more areas soon.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-question">What payment methods are accepted? <span class="faq-arrow">▼</span></div>
+      <div class="faq-answer">You can pay online by card (processed securely via Yoco) or choose cash/speedpoint on delivery — pay when your order arrives.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-question">How do I cancel an order? <span class="faq-arrow">▼</span></div>
+      <div class="faq-answer">Orders can only be cancelled before the store accepts them. Once accepted, please contact us directly via WhatsApp or email and we'll do our best to assist.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-question">How do I list my restaurant on Fetch? <span class="faq-arrow">▼</span></div>
+      <div class="faq-answer">We'd love to have you on board. Fill in the partner application on our website or email us at support@fetch-sa.co.za and we'll get you set up.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-question">How do I become a delivery driver? <span class="faq-arrow">▼</span></div>
+      <div class="faq-answer">Drivers are managed directly by individual stores. Contact the store you'd like to drive for to enquire about availability.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-question">How do I delete my account? <span class="faq-arrow">▼</span></div>
+      <div class="faq-answer">You can request account deletion at <a href="/delete-account.html" style="color:#06C167">fetch-sa.co.za/delete-account.html</a> or by emailing us at support@fetch-sa.co.za.</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">FETCH<span>.</span></div>
+  <div class="footer-links">
+    <a href="/">Home</a>
+    <a href="/privacy.html">Privacy Policy</a>
+    <a href="/terms.html">Terms of Service</a>
+    <a href="/delete-account.html">Delete Account</a>
+    <a href="/contact.html">Contact</a>
+  </div>
+  <div class="footer-copy">© 2025 Fetch. Bartholos Pty Ltd</div>
+</footer>
+
+<script>
+function toggleFaq(el) {
+  const answer = el.querySelector('.faq-answer');
+  const arrow = el.querySelector('.faq-arrow');
+  answer.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+</script>
+
+</body>
+</html>
