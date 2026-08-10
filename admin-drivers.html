@@ -94,6 +94,11 @@ tbody td{padding:14px 16px;font-size:14px;vertical-align:middle;}
 .chip.sel{background:#000;color:#fff;border-color:#000;}
 .toast{position:fixed;bottom:24px;right:24px;background:#000;color:#fff;padding:14px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;display:none;align-items:center;gap:8px;}
 .toast.show{display:flex;}
+.rating-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.rating-bar-label{font-size:12px;color:var(--muted);width:20px;text-align:right;flex-shrink:0;}
+.rating-bar-track{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+.rating-bar-fill{height:100%;background:#F39C12;border-radius:4px;transition:width 0.3s;}
+.rating-bar-count{font-size:12px;color:var(--muted);width:24px;flex-shrink:0;}
 @media(max-width:900px){.sidebar{display:none;}.main{margin-left:0;}.stats-grid{grid-template-columns:1fr 1fr;}.content{padding:16px;}.detail-panel{width:100vw;}}
 </style>
 </head>
@@ -178,9 +183,7 @@ tbody td{padding:14px 16px;font-size:14px;vertical-align:middle;}
           <div class="info-sec-title" style="margin-bottom:0;border-bottom:none;padding-bottom:0">Delivery Zones</div>
           <button class="btn btn-grey btn-sm" onclick="openZoneEditor()">✏️ Edit Zones</button>
         </div>
-        <div id="ip-zones-list">
-          <div style="color:var(--muted);font-size:13px">Loading zones...</div>
-        </div>
+        <div id="ip-zones-list"><div style="color:var(--muted);font-size:13px">Loading zones...</div></div>
       </div>
     </div>
 
@@ -216,13 +219,8 @@ tbody td{padding:14px 16px;font-size:14px;vertical-align:middle;}
       </div>
       <div style="margin-bottom:20px">
         <div class="info-sec-title" style="margin-bottom:14px">Customer Ratings</div>
-        <div style="display:flex;align-items:center;gap:20px">
-          <div style="text-align:center;flex-shrink:0">
-            <div style="font-family:'Syne',sans-serif;font-size:48px;font-weight:900;line-height:1" id="ee-avgr">—</div>
-            <div style="color:#F39C12;font-size:18px;letter-spacing:2px" id="ee-stars">☆☆☆☆☆</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px" id="ee-rcount">0 ratings</div>
-          </div>
-          <div style="flex:1" id="ee-bars"></div>
+        <div id="ee-ratings-wrap">
+          <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Loading ratings...</div>
         </div>
       </div>
       <div style="font-size:12px;color:var(--muted);padding:12px;background:var(--surface);border-radius:8px;text-align:center">
@@ -289,9 +287,7 @@ tbody td{padding:14px 16px;font-size:14px;vertical-align:middle;}
       <label>Linked Device</label>
       <select id="m-device"><option value="">No device linked</option></select>
       <span class="sec-title">Delivery Zones</span>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:12px">
-        Select all zones this driver will serve.
-      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Select all zones this driver will serve.</div>
       <div id="zone-selector-wrap" style="max-height:280px;overflow-y:auto;border:1.5px solid var(--border);border-radius:10px;padding:8px">
         <div style="text-align:center;padding:20px;color:var(--muted)">Loading zones...</div>
       </div>
@@ -356,17 +352,13 @@ async function refreshAdminToken(){
 }
 async function apiFetch(url,opts={},retried=false){
   const r=await fetch(url,opts);
-  if(r.status===401&&!retried){
-    const ok=await refreshAdminToken();
-    if(ok){opts.headers={...opts.headers,'Authorization':'Bearer '+getToken()};return apiFetch(url,opts,true);}
-  }
+  if(r.status===401&&!retried){const ok=await refreshAdminToken();if(ok){opts.headers={...opts.headers,'Authorization':'Bearer '+getToken()};return apiFetch(url,opts,true);}}
   return r;
 }
 setInterval(refreshAdminToken,10*60*1000);
 refreshAdminToken();
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){loadAll?.();}});
-
-document.getElementById('sidebar-wrap').innerHTML = buildSidebar('drivers');
+document.getElementById('sidebar-wrap').innerHTML=buildSidebar('drivers');
 guardAdmin();
 
 const SB=SUPABASE_URL;
@@ -380,34 +372,24 @@ function toast(msg,err=false){const t=document.getElementById('toast');t.textCon
 function pill(s){const m={active:['#E6F9F0','#0A7A45'],inactive:['#F7F7F7','#8E8E8E'],driver:['#E6F9F0','#0A7A45'],suspended_driver:['#FDECEA','#B91C1C']};const[bg,c]=m[s]||['#F7F7F7','#8E8E8E'];const l=s.replace(/_/g,' ').replace(/\b\w/g,x=>x.toUpperCase());return`<span style="background:${bg};color:${c};padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">${l}</span>`;}
 function expWarn(e){if(!e)return false;const p=e.split('/');if(p.length<2)return false;const d=new Date(parseInt(p[1]),parseInt(p[0])-1,1);return(d-Date.now())<30*24*60*60*1000;}
 function periodStart(p){const n=new Date();if(p==='today')return new Date(n.getFullYear(),n.getMonth(),n.getDate());if(p==='week'){const d=new Date(n);d.setDate(d.getDate()-7);return d;}if(p==='month')return new Date(n.getFullYear(),n.getMonth(),1);return new Date(0);}
+function starsHtml(r){if(!r)return'☆☆☆☆☆';const f=Math.round(r);return'★'.repeat(f)+'☆'.repeat(5-f);}
 
 let allDrivers=[],allOrders=[],allDevices=[],allStores=[],allZones=[],currentDriver=null,tPeriod='today',ePeriod='today';
 let selectedZoneIds=[],driverZoneMap={};
 
 // ── Payment model helpers ─────────────────────────────────────
-function getDriverStore(driver){
-  return allStores.find(s=>s.id===driver.store_id);
-}
-function getDriverPayModel(driver){
-  const store=getDriverStore(driver);
-  return store?.driver_payment_model||'commission';
-}
-function getDriverPayModelLabel(driver){
-  const model=getDriverPayModel(driver);
-  if(model==='fixed_delivery_fee') return 'Fixed delivery fee';
-  return (driver.commission_rate||15)+'% commission';
-}
+function getDriverStore(driver){return allStores.find(s=>s.id===driver.store_id);}
+function getDriverPayModel(driver){const store=getDriverStore(driver);return store?.driver_payment_model||'commission';}
+function getDriverPayModelLabel(driver){const model=getDriverPayModel(driver);if(model==='fixed_delivery_fee')return'Fixed delivery fee';return(driver.commission_rate||15)+'% commission';}
 function getDriverEarnings(driver,orders){
   const model=getDriverPayModel(driver);
-  if(model==='fixed_delivery_fee'){
-    return orders.reduce((s,o)=>s+parseFloat(o.delivery_fee||0),0);
-  }
+  if(model==='fixed_delivery_fee'){return orders.reduce((s,o)=>s+parseFloat(o.delivery_fee||0),0);}
   const rate=driver.commission_rate||15;
   return orders.reduce((s,o)=>s+parseFloat(o.total_amount||0)*rate/100,0);
 }
 function getTripEarning(driver,order){
   const model=getDriverPayModel(driver);
-  if(model==='fixed_delivery_fee') return parseFloat(order.delivery_fee||0);
+  if(model==='fixed_delivery_fee')return parseFloat(order.delivery_fee||0);
   return parseFloat(order.total_amount||0)*(driver.commission_rate||15)/100;
 }
 
@@ -427,12 +409,7 @@ async function loadAll(){
 
   const dzData=await get('driver_zones','?select=driver_id,zone_id');
   driverZoneMap={};
-  if(Array.isArray(dzData)){
-    dzData.forEach(r=>{
-      if(!driverZoneMap[r.driver_id])driverZoneMap[r.driver_id]=[];
-      driverZoneMap[r.driver_id].push(r.zone_id);
-    });
-  }
+  if(Array.isArray(dzData)){dzData.forEach(r=>{if(!driverZoneMap[r.driver_id])driverZoneMap[r.driver_id]=[];driverZoneMap[r.driver_id].push(r.zone_id);});}
 
   const active=allDrivers.filter(d=>d.status==='active').length;
   const inactive=allDrivers.filter(d=>d.status!=='active').length;
@@ -488,6 +465,56 @@ function renderTable(data){
 
 function filterDrivers(q){const f=q.toLowerCase();renderTable(allDrivers.filter(d=>(d.full_name||'').toLowerCase().includes(f)||(d.phone||'').includes(f)||(d.licence_number||'').toLowerCase().includes(f)));}
 
+// ── Driver ratings ────────────────────────────────────────────
+async function loadDriverRatings(driver){
+  const el=document.getElementById('ee-ratings-wrap');
+  if(!el)return;
+  el.innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">Loading ratings...</div>';
+
+  const driverOrderIds=getDriverOrders(driver).map(o=>o.id);
+  if(!driverOrderIds.length){
+    el.innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">No trips yet — no ratings to show.</div>';
+    return;
+  }
+
+  // Fetch ratings for driver's orders
+  const inClause=driverOrderIds.slice(0,50).map(id=>`"${id}"`).join(',');
+  const ratings=await get('ratings',`?order_id=in.(${driverOrderIds.slice(0,50).join(',')})&select=driver_rating,created_at&not.driver_rating.is.null`);
+
+  if(!Array.isArray(ratings)||!ratings.length){
+    el.innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">No ratings yet for this driver.</div>';
+    return;
+  }
+
+  const validRatings=ratings.filter(r=>r.driver_rating>=1&&r.driver_rating<=5);
+  if(!validRatings.length){
+    el.innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">No ratings yet for this driver.</div>';
+    return;
+  }
+
+  const avg=validRatings.reduce((s,r)=>s+r.driver_rating,0)/validRatings.length;
+  const counts={5:0,4:0,3:0,2:0,1:0};
+  validRatings.forEach(r=>{const v=Math.round(r.driver_rating);if(counts[v]!==undefined)counts[v]++;});
+  const max=Math.max(...Object.values(counts),1);
+
+  const barsHtml=[5,4,3,2,1].map(star=>`
+    <div class="rating-bar-row">
+      <div class="rating-bar-label">${star}★</div>
+      <div class="rating-bar-track"><div class="rating-bar-fill" style="width:${(counts[star]/max)*100}%"></div></div>
+      <div class="rating-bar-count">${counts[star]}</div>
+    </div>`).join('');
+
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:24px;margin-bottom:16px">
+      <div style="text-align:center;flex-shrink:0">
+        <div style="font-family:'Syne',sans-serif;font-size:48px;font-weight:900;line-height:1;color:#000">${avg.toFixed(1)}</div>
+        <div style="color:#F39C12;font-size:20px;letter-spacing:2px;margin-top:4px">${starsHtml(avg)}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">${validRatings.length} rating${validRatings.length!==1?'s':''}</div>
+      </div>
+      <div style="flex:1">${barsHtml}</div>
+    </div>`;
+}
+
 function openDetail(id){
   currentDriver=allDrivers.find(d=>d.id===id);
   if(!currentDriver)return;
@@ -517,7 +544,14 @@ function openDetail(id){
   loadTrips();loadEarnings();
 }
 function closeDetail(){document.getElementById('detail-overlay').classList.remove('open');currentDriver=null;}
-function switchTab(tab,btn){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));btn.classList.add('active');document.getElementById('tab-'+tab).classList.add('active');}
+function switchTab(tab,btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  // Load ratings when earnings tab is opened
+  if(tab==='earnings'&&currentDriver)loadDriverRatings(currentDriver);
+}
 function editCurrent(){if(currentDriver)openEdit(currentDriver.id);}
 
 function loadTrips(){
@@ -547,10 +581,8 @@ function loadEarnings(){
   document.getElementById('ee-trips').textContent=trips.length;
   document.getElementById('ee-avg').textContent=formatZAR(avg);
   document.getElementById('ee-rate').textContent=getDriverPayModelLabel(currentDriver);
-  document.getElementById('ee-avgr').textContent='—';
-  document.getElementById('ee-stars').textContent='☆☆☆☆☆';
-  document.getElementById('ee-rcount').textContent='0 ratings';
-  document.getElementById('ee-bars').innerHTML='<div style="color:var(--muted);font-size:13px">No rating data available</div>';
+  // Ratings are loaded separately when tab is opened
+  loadDriverRatings(currentDriver);
 }
 function setEP(p,btn){ePeriod=p;document.querySelectorAll('#tab-earnings .pchip').forEach(c=>c.classList.remove('active'));btn.classList.add('active');loadEarnings();}
 
@@ -574,8 +606,7 @@ function openZoneEditor(){
 function closeZoneModal(){document.getElementById('zone-modal').classList.remove('open');}
 
 function renderZoneSelector(containerId,summaryId){
-  const el=document.getElementById(containerId);
-  if(!el)return;
+  const el=document.getElementById(containerId);if(!el)return;
   if(!allZones.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">No delivery zones found.</div>';return;}
   const grouped={};
   allZones.forEach(z=>{const key=z.store_name||'Other';if(!grouped[key])grouped[key]=[];grouped[key].push(z);});
@@ -583,17 +614,8 @@ function renderZoneSelector(containerId,summaryId){
   updateZoneSummary(summaryId);
 }
 
-function toggleZone(zoneId,containerId,summaryId){
-  const idx=selectedZoneIds.indexOf(zoneId);
-  if(idx>-1)selectedZoneIds.splice(idx,1);else selectedZoneIds.push(zoneId);
-  renderZoneSelector(containerId,summaryId);
-}
-function updateZoneSummary(summaryId){
-  const el=document.getElementById(summaryId);if(!el)return;
-  if(selectedZoneIds.length===0){el.style.display='none';return;}
-  el.style.display='block';
-  el.textContent=`✓ ${selectedZoneIds.length} zone${selectedZoneIds.length!==1?'s':''} selected`;
-}
+function toggleZone(zoneId,containerId,summaryId){const idx=selectedZoneIds.indexOf(zoneId);if(idx>-1)selectedZoneIds.splice(idx,1);else selectedZoneIds.push(zoneId);renderZoneSelector(containerId,summaryId);}
+function updateZoneSummary(summaryId){const el=document.getElementById(summaryId);if(!el)return;if(selectedZoneIds.length===0){el.style.display='none';return;}el.style.display='block';el.textContent=`✓ ${selectedZoneIds.length} zone${selectedZoneIds.length!==1?'s':''} selected`;}
 
 async function saveDriverZones(){
   if(!currentDriver)return;
