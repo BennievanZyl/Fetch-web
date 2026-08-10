@@ -211,6 +211,9 @@ async function selectStore(store){
 async function loadMenu(){
   if(!selectedStore){return;}
   const area=document.getElementById('menu-area');
+  // Preserve scroll position and which product cards are expanded
+  const scrollY=window.scrollY;
+  const openCards=new Set([...document.querySelectorAll('.product-body:not(.hidden)')].map(el=>el.id));
   area.innerHTML='<div style="text-align:center;padding:40px;color:#8E8E8E">Loading menu...</div>';
   const products=await get('products','?store_id=eq.'+selectedStore.id+'&order=category,name&select=*');
   if(!Array.isArray(products)||!products.length){
@@ -244,6 +247,9 @@ async function loadMenu(){
     }
   }
   area.innerHTML=html;
+  // Restore expanded cards and scroll position after re-render
+  openCards.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('hidden');});
+  window.scrollTo({top:scrollY,behavior:'instant'});
 }
 function buildProductCard(p,groups){
   // Filter out soft-deleted (unavailable) options for display
